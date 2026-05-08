@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Dashboard Admin SPPG TAMBAKREJO</title>
+
+<style>
+
+body{
+  font-family:Arial,sans-serif;
+  background:#f4f4f4;
+  margin:0;
+  padding:20px;
+}
+
+#loginBox{
+
+  max-width:320px;
+
+  margin:80px auto;
+
+  background:white;
+
+  padding:24px;
+
+  border-radius:20px;
+
+  box-shadow:
+  0 4px 20px rgba(0,0,0,0.08);
+
+}
+
+#loginBox h2{
+
+  margin-bottom:20px;
+
+  text-align:center;
+
+}
+
+#loginBox input{
+
+  width:100%;
+
+  padding:14px;
+
+  border-radius:12px;
+
+  border:1px solid #ddd;
+
+  margin-bottom:14px;
+
+  font-size:16px;
+
+  box-sizing:border-box;
+
+}
+
+#loginBox button{
+
+  width:100%;
+
+}
+
+h1{
+  margin-bottom:8px;
+}
+
+.subtitle{
+  color:#666;
+  margin-bottom:24px;
+}
+
+.card-wrap{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:16px;
+  margin-bottom:24px;
+}
+
+.card{
+  background:white;
+  padding:20px;
+  border-radius:18px;
+  box-shadow:0 2px 10px rgba(0,0,0,0.06);
+}
+
+.card h2{
+  margin:0;
+  font-size:34px;
+}
+
+.card p{
+  margin-top:8px;
+  color:#666;
+}
+
+.filter-box{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-bottom:20px;
+}
+
+select,
+button{
+  padding:12px;
+  border-radius:12px;
+  border:1px solid #ddd;
+  font-size:15px;
+}
+
+button{
+  background:#111;
+  color:white;
+  border:none;
+  cursor:pointer;
+}
+
+.table-wrap{
+  overflow-x:auto;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:white;
+  border-radius:18px;
+  overflow:hidden;
+}
+
+th{
+  background:#111;
+  color:white;
+  padding:14px;
+  text-align:left;
+}
+
+td{
+  padding:14px;
+  border-bottom:1px solid #eee;
+}
+
+.status-aktif{
+
+  background:#e8f5e9;
+
+  color:#2e7d32;
+
+  padding:6px 12px;
+
+  border-radius:999px;
+
+  font-size:13px;
+
+  font-weight:bold;
+
+  display:inline-block;
+
+}
+
+.status-pulang{
+
+  background:#ffebee;
+
+  color:#c62828;
+
+  padding:6px 12px;
+
+  border-radius:999px;
+
+  font-size:13px;
+
+  font-weight:bold;
+
+  display:inline-block;
+
+}
+
+.footer{
+  text-align:center;
+  margin-top:24px;
+  color:#999;
+  font-size:12px;
+}
+
+</style>
+
+</head>
+<body>
+
+
+
+<div id="loginBox">
+
+<h2>
+Login Admin
+</h2>
+
+<input
+type="password"
+id="adminPin"
+placeholder="Masukkan PIN Admin">
+
+<button onclick="loginAdmin()">
+Masuk Dashboard
+</button>
+
+</div>
+
+
+
+
+
+<div id="dashboardBox" style="display:none;">
+
+
+<h1>
+Dashboard Admin SPPG TAMBAKREJO
+</h1>
+
+<div class="subtitle">
+Monitoring Absensi Relawan
+</div>
+
+
+
+<div class="card-wrap">
+
+<div class="card">
+<h2 id="totalHadir">0</h2>
+<p>Total Hadir</p>
+</div>
+
+<div class="card">
+<h2 id="belumPulang">0</h2>
+<p>Belum Pulang</p>
+</div>
+
+<div class="card">
+<h2 id="totalDivisi">0</h2>
+<p>Total Divisi Aktif</p>
+</div>
+
+</div>
+
+
+
+
+<div class="filter-box">
+
+<select id="filterShift" onchange="loadData()">
+<option value="">Semua Shift</option>
+</select>
+
+<select id="filterDivisi" onchange="loadData()">
+<option value="">Semua Divisi</option>
+</select>
+
+<button onclick="loadData()">
+Refresh
+</button>
+
+<button onclick="exportExcel()">
+Export Excel
+</button>
+
+</div>
+
+
+
+
+
+<div class="table-wrap">
+
+<table>
+
+<thead>
+<tr>
+
+<th>Shift</th>
+<th>Nama</th>
+<th>Divisi</th>
+<th>Masuk</th>
+<th>Pulang</th>
+<th>Status</th>
+<th>Total Kerja</th>
+<th>Lokasi</th>
+<th>Foto</th>
+
+</tr>
+</thead>
+
+<tbody id="tbody">
+</tbody>
+
+</table>
+
+</div>
+
+
+
+
+<div class="footer">
+© 2026 F_
+</div>
+
+</div>
+
+
+
+
+
+<script>
+
+
+
+// ======================
+// URL APPS SCRIPT
+// ======================
+
+const url =
+"https://script.google.com/macros/s/AKfycbzJ2x2vUT9MONWSLnGMKiZI0voXR-gwehFT9-5gE3b9abYhI55veyYV6iTx0W9MrDqp/exec";
+
+
+
+
+// ======================
+// PIN ADMIN
+// ======================
+
+const ADMIN_PIN =
+"666";
+
+
+
+
+// ======================
+// LOGIN ADMIN
+// ======================
+
+function loginAdmin(){
+
+  const pin =
+
+    document
+    .getElementById(
+      "adminPin"
+    )
+    .value;
+
+
+
+  if(pin === ADMIN_PIN){
+
+    document
+    .getElementById(
+      "loginBox"
+    )
+    .style.display =
+
+    "none";
+
+
+
+    document
+    .getElementById(
+      "dashboardBox"
+    )
+    .style.display =
+
+    "block";
+
+
+
+    loadData();
+
+  }
+
+  else{
+
+    alert(
+      "PIN Admin Salah"
+    );
+
+  }
+
+}
+
+
+
+
+// ======================
+// LOAD DATA
+// ======================
+
+async function loadData(){
+
+  try{
+
+    const response =
+
+      await fetch(
+
+        url + "?dashboard=1"
+
+      );
+
+
+
+    const data =
+      await response.json();
+
+
+
+    const tbody =
+      document.getElementById(
+        "tbody"
+      );
+
+
+    tbody.innerHTML = "";
+
+
+
+    let belumPulang = 0;
+
+
+    const divisiSet =
+      new Set();
+
+
+    const shiftSet =
+      new Set();
+
+
+
+
+    data.forEach(item => {
+
+      divisiSet.add(
+        item.divisi
+      );
+
+      shiftSet.add(
+        item.shift
+      );
+
+
+      if(
+        item.pulang === ""
+      ){
+
+        belumPulang++;
+
+      }
+
+    });
+
+
+
+
+    document
+    .getElementById(
+      "totalHadir"
+    )
+    .innerHTML =
+
+    data.length;
+
+
+
+
+    document
+    .getElementById(
+      "belumPulang"
+    )
+    .innerHTML =
+
+    belumPulang;
+
+
+
+
+    document
+    .getElementById(
+      "totalDivisi"
+    )
+    .innerHTML =
+
+    divisiSet.size;
+
+
+
+
+
+    isiFilterShift(
+      [...shiftSet]
+    );
+
+
+    isiFilterDivisi(
+      [...divisiSet]
+    );
+
+
+
+
+    const filterShift =
+
+      document
+      .getElementById(
+        "filterShift"
+      )
+      .value;
+
+
+
+
+    const filterDivisi =
+
+      document
+      .getElementById(
+        "filterDivisi"
+      )
+      .value;
+
+
+
+
+
+    const filtered =
+
+      data.filter(item => {
+
+
+        const cocokShift =
+
+          !filterShift ||
+
+          item.shift ===
+          filterShift;
+
+
+
+        const cocokDivisi =
+
+          !filterDivisi ||
+
+          item.divisi ===
+          filterDivisi;
+
+
+
+
+        return (
+
+          cocokShift &&
+
+          cocokDivisi
+
+        );
+
+      });
+
+
+
+
+
+
+    filtered.forEach(item => {
+
+      const tr =
+        document
+        .createElement("tr");
+
+
+
+      tr.innerHTML = `
+
+      <td>${item.shift}</td>
+
+      <td>${item.nama}</td>
+
+      <td>${item.divisi}</td>
+
+      <td>${formatJam(item.masuk)}</td>
+
+      <td>${item.pulang ? formatJam(item.pulang) : "-"}</td>
+
+
+      <td>
+
+      ${item.pulang === ""
+
+      ?
+
+      '<span class="status-aktif">🟢 Sedang Bertugas</span>'
+
+      :
+
+      '<span class="status-pulang">🔴 Sudah Pulang</span>'}
+
+      </td>
+
+
+      <td>
+
+      ${hitungDurasi(
+        item.masuk,
+        item.pulang
+      )}
+
+      </td>
+
+
+      <td>
+
+      <a href="https://maps.google.com/?q=${item.lokasi}" target="_blank">
+
+      Lihat
+
+      </a>
+
+      </td>
+
+
+      <td>
+
+      ${item.foto}
+
+      </td>
+
+      `;
+
+
+
+      tbody.appendChild(tr);
+
+    });
+
+  }
+
+  catch(error){
+
+    alert(
+      "Gagal load dashboard"
+    );
+
+  }
+
+}
+
+
+
+
+// ======================
+// FILTER SHIFT
+// ======================
+
+function isiFilterShift(data){
+
+  const select =
+
+    document
+    .getElementById(
+      "filterShift"
+    );
+
+
+  if(
+    select.options.length > 1
+  ){
+    return;
+  }
+
+
+
+  data.forEach(item => {
+
+    const option =
+
+      document
+      .createElement(
+        "option"
+      );
+
+
+    option.value =
+      item;
+
+    option.text =
+      item;
+
+
+    select.appendChild(
+      option
+    );
+
+  });
+
+}
+
+
+
+
+// ======================
+// FILTER DIVISI
+// ======================
+
+function isiFilterDivisi(data){
+
+  const select =
+
+    document
+    .getElementById(
+      "filterDivisi"
+    );
+
+
+  if(
+    select.options.length > 1
+  ){
+    return;
+  }
+
+
+
+  data.forEach(item => {
+
+    const option =
+
+      document
+      .createElement(
+        "option"
+      );
+
+
+    option.value =
+      item;
+
+    option.text =
+      item;
+
+
+    select.appendChild(
+      option
+    );
+
+  });
+
+}
+
+
+
+
+// ======================
+// FORMAT JAM
+// ======================
+
+function formatJam(value){
+
+  if(!value){
+    return "-";
+  }
+
+
+  const date =
+    new Date(value);
+
+
+  if(isNaN(date)){
+    return value;
+  }
+
+
+  return date.toLocaleTimeString(
+
+    "id-ID",
+
+    {
+
+      hour:"2-digit",
+
+      minute:"2-digit"
+
+    }
+
+  );
+
+}
+
+
+
+
+// ======================
+// HITUNG DURASI
+// ======================
+
+function hitungDurasi(
+
+  masuk,
+  pulang
+
+){
+
+  if(!masuk || !pulang){
+
+    return "-";
+
+  }
+
+
+
+  const jamMasuk =
+    new Date(masuk);
+
+
+  const jamPulang =
+    new Date(pulang);
+
+
+
+  if(
+    isNaN(jamMasuk) ||
+    isNaN(jamPulang)
+  ){
+
+    return "-";
+
+  }
+
+
+
+  let selisih =
+
+    (jamPulang - jamMasuk)
+
+    / 1000;
+
+
+
+  const jam =
+
+    Math.floor(
+      selisih / 3600
+    );
+
+
+
+  const menit =
+
+    Math.floor(
+
+      (selisih % 3600)
+
+      / 60
+
+    );
+
+
+
+  return `
+
+  ${jam}j ${menit}m
+
+  `;
+
+}
+
+
+
+
+// ======================
+// EXPORT EXCEL
+// ======================
+
+function exportExcel(){
+
+  const table =
+
+    document.querySelector(
+      "table"
+    );
+
+
+  let html =
+
+    table.outerHTML;
+
+
+
+  html = html.replace(
+    /<a[^>]*>|<\/a>/g,
+    ""
+  );
+
+
+
+  const blob =
+
+    new Blob(
+
+      [html],
+
+      {
+
+        type:
+        "application/vnd.ms-excel"
+
+      }
+
+    );
+
+
+
+  const urlBlob =
+
+    URL.createObjectURL(
+      blob
+    );
+
+
+
+  const a =
+    document.createElement(
+      "a"
+    );
+
+
+
+  a.href =
+    urlBlob;
+
+
+
+  a.download =
+
+    "rekap-absensi.xls";
+
+
+
+  a.click();
+
+
+
+  URL.revokeObjectURL(
+    urlBlob
+  );
+
+}
+
+
+
+
+// ======================
+// AUTO REFRESH
+// ======================
+
+setInterval(
+
+  loadData,
+
+  30000
+
+);
+
+
+</script>
+
+</body>
+</html>
