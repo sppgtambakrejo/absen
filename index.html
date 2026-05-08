@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<link rel="manifest" href="manifest.json">
+
+<meta name="theme-color" content="#111111">
+
+<link rel="apple-touch-icon" href="icon-192.png">
+
+  <meta name="apple-mobile-web-app-capable" content="yes">
+
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+<meta name="apple-mobile-web-app-title" content="Absensi SPPG">
+  
+<title>
+Absensi Relawan MBG
+</title>
+
+<style>
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+body{
+
+  font-family:Arial,sans-serif;
+
+  background:#f5f5f5;
+
+  padding:20px;
+
+}
+
+.container{
+
+  max-width:420px;
+
+  margin:auto;
+
+  background:white;
+
+  padding:24px;
+
+  border-radius:24px;
+
+  box-shadow:
+  0 4px 20px rgba(0,0,0,0.08);
+
+}
+
+.logo{
+
+  text-align:center;
+
+  font-size:52px;
+
+  margin-bottom:10px;
+
+}
+
+h2{
+
+  text-align:center;
+
+  margin-bottom:6px;
+
+  font-size:28px;
+
+}
+
+.subtitle{
+
+  text-align:center;
+
+  color:#666;
+
+  margin-bottom:24px;
+
+  font-size:14px;
+
+}
+
+select,
+input,
+button{
+
+  width:100%;
+
+  padding:16px;
+
+  margin-top:14px;
+
+  border-radius:14px;
+
+  border:1px solid #ddd;
+
+  font-size:16px;
+
+}
+
+button{
+
+  background:#111;
+
+  color:white;
+
+  border:none;
+
+  font-weight:bold;
+
+  cursor:pointer;
+
+}
+
+button:active{
+
+  transform:scale(0.98);
+
+}
+
+#hasil{
+
+  margin-top:20px;
+
+  text-align:center;
+
+  font-weight:bold;
+
+  line-height:1.6;
+
+}
+
+#kameraBox{
+
+  display:none;
+
+  margin-top:20px;
+
+}
+
+video{
+
+  width:100%;
+
+  border-radius:16px;
+
+}
+
+.footer{
+
+  text-align:center;
+
+  margin-top:30px;
+
+  font-size:12px;
+
+  color:#999;
+
+  letter-spacing:1px;
+
+}
+
+</style>
+
+</head>
+<body>
+
+
+<div class="container">
+
+
+<div class="logo">
+<img src="https://upload.wikimedia.org/wikipedia/id/thumb/2/29/Logo_Badan_Gizi_Nasional.svg/960px-Logo_Badan_Gizi_Nasional.svg.png" style="width:100%; height:auto;">
+</div>
+
+
+<h2>
+Absensi Relawan SPPG TAMBAKREJO TEMPEL
+</h2>
+
+
+<div class="subtitle">
+Proses Trial dulu ya gaes, kalau ada kendala bisa hubungi koordinator divisi masing-masing.
+</div>
+
+
+
+<select id="divisi">
+
+<option value="">
+Pilih Divisi
+</option>
+
+</select>
+
+
+
+<select id="nama">
+
+<option value="">
+Pilih Nama Relawan
+</option>
+
+</select>
+
+
+
+<select id="shiftHari">
+
+<option value="">
+Pilih Shift Hari
+</option>
+
+<option value="Senin">
+Senin
+</option>
+
+<option value="Selasa">
+Selasa
+</option>
+
+<option value="Rabu">
+Rabu
+</option>
+
+<option value="Kamis">
+Kamis
+</option>
+
+<option value="Jumat">
+Jumat
+</option>
+
+<option value="Sabtu">
+Sabtu
+</option>
+
+</select>
+
+
+
+<input
+type="password"
+id="pin"
+placeholder="Masukkan PIN">
+
+
+
+<button
+id="btnAbsen"
+onclick="fotoDanAbsen()">
+
+Loading...
+
+</button>
+
+
+
+<div id="kameraBox">
+
+
+<video
+id="video"
+autoplay
+playsinline>
+</video>
+
+
+<button
+onclick="ambilFoto()">
+
+📸 Ambil Foto
+
+</button>
+
+</div>
+
+
+
+<canvas
+id="canvas"
+style="display:none;">
+</canvas>
+
+
+
+<div id="hasil"></div>
+
+
+
+<div class="footer">
+
+© 2026 F_
+
+</div>
+
+
+</div>
+
+
+
+
+<script>
+
+
+// ======================
+// URL APPS SCRIPT
+// ======================
+
+const url =
+"https://script.google.com/macros/s/AKfycbzJ2x2vUT9MONWSLnGMKiZI0voXR-gwehFT9-5gE3b9abYhI55veyYV6iTx0W9MrDqp/exec";
+
+
+
+
+// ======================
+// LOAD RELAWAN
+// ======================
+
+async function loadRelawan(){
+
+  try{
+
+    const response =
+      await fetch(url);
+
+    const data =
+      await response.json();
+
+    window.relawanData =
+      data;
+
+
+    const divisiUnik =
+
+      [...new Set(
+
+        data.map(
+          r => r.divisi
+        )
+
+      )];
+
+
+    const divisiSelect =
+      document
+      .getElementById(
+        "divisi"
+      );
+
+
+    divisiSelect.innerHTML =
+
+      '<option value="">Pilih Divisi</option>';
+
+
+    divisiUnik.forEach(divisi => {
+
+      const option =
+        document
+        .createElement(
+          "option"
+        );
+
+      option.value =
+        divisi;
+
+      option.text =
+        divisi;
+
+      divisiSelect
+      .appendChild(option);
+
+    });
+
+  }
+
+  catch(error){
+
+    document
+    .getElementById(
+      "hasil"
+    )
+
+    .innerHTML =
+
+    "Gagal load data relawan";
+
+  }
+
+}
+
+
+
+
+// ======================
+// FILTER NAMA
+// ======================
+
+document
+.getElementById(
+  "divisi"
+)
+
+.addEventListener(
+  "change",
+
+  function(){
+
+    const divisiDipilih =
+      this.value;
+
+
+    const namaSelect =
+      document
+      .getElementById(
+        "nama"
+      );
+
+
+    namaSelect.innerHTML =
+
+    '<option value="">Pilih Nama Relawan</option>';
+
+
+    const filtered =
+
+      window.relawanData.filter(
+
+        r =>
+        r.divisi ===
+        divisiDipilih
+
+      );
+
+
+    filtered.forEach(relawan => {
+
+      const option =
+        document
+        .createElement(
+          "option"
+        );
+
+      option.value =
+        relawan.nama;
+
+      option.text =
+        relawan.nama;
+
+      namaSelect
+      .appendChild(option);
+
+    });
+
+  }
+
+);
+
+
+
+
+// ======================
+// UPDATE TOMBOL
+// ======================
+
+async function updateTombol(){
+
+  const nama =
+
+    document
+    .getElementById(
+      "nama"
+    )
+    .value;
+
+
+  const tombol =
+
+    document
+    .getElementById(
+      "btnAbsen"
+    );
+
+
+  if(!nama){
+
+    tombol.innerHTML =
+      "Pilih Nama";
+
+    return;
+
+  }
+
+
+  try{
+
+    const response =
+
+      await fetch(
+
+        url +
+
+        "?cek=" +
+
+        encodeURIComponent(
+          nama
+        )
+
+      );
+
+
+    const hasil =
+      await response.text();
+
+
+    if(
+      hasil ===
+      "BELUM_PULANG"
+    ){
+
+      tombol.innerHTML =
+        "🔴 Absen Pulang";
+
+    }
+
+    else{
+
+      tombol.innerHTML =
+        "📸 Foto & Absen Masuk";
+
+    }
+
+  }
+
+  catch(error){
+
+    tombol.innerHTML =
+      "⚠️ Error";
+
+  }
+
+}
+
+
+
+
+// ======================
+// KAMERA
+// ======================
+
+let streamKamera =
+null;
+
+
+
+async function bukaKamera(){
+
+  try{
+
+    streamKamera =
+
+      await navigator
+      .mediaDevices
+      .getUserMedia({
+
+        video:{
+          facingMode:"user"
+        },
+
+        audio:false
+
+      });
+
+
+    document
+    .getElementById(
+      "video"
+    )
+    .srcObject =
+
+    streamKamera;
+
+
+    document
+    .getElementById(
+      "kameraBox"
+    )
+    .style.display =
+
+    "block";
+
+  }
+
+  catch(error){
+
+    alert(
+      "Kamera tidak diizinkan"
+    );
+
+  }
+
+}
+
+
+
+
+function tutupKamera(){
+
+  if(streamKamera){
+
+    streamKamera
+    .getTracks()
+
+    .forEach(track => {
+
+      track.stop();
+
+    });
+
+  }
+
+
+  document
+  .getElementById(
+    "kameraBox"
+  )
+  .style.display =
+
+  "none";
+
+}
+
+
+
+
+// ======================
+// FOTO ATAU PULANG
+// ======================
+
+async function fotoDanAbsen(){
+
+  const tombol =
+
+    document
+    .getElementById(
+      "btnAbsen"
+    );
+
+
+  if(
+
+    tombol.innerHTML.includes(
+      "Pulang"
+    )
+
+  ){
+
+    prosesAbsen();
+
+    return;
+
+  }
+
+
+  bukaKamera();
+
+}
+
+
+
+
+// ======================
+// AMBIL FOTO
+// ======================
+
+async function ambilFoto(){
+
+  const canvas =
+
+    document
+    .getElementById(
+      "canvas"
+    );
+
+
+  const video =
+
+    document
+    .getElementById(
+      "video"
+    );
+
+
+  canvas.width =
+    video.videoWidth;
+
+  canvas.height =
+    video.videoHeight;
+
+
+  const ctx =
+    canvas.getContext("2d");
+
+
+  ctx.drawImage(
+
+    video,
+
+    0,
+    0
+
+  );
+
+
+  const foto =
+
+    canvas.toDataURL(
+
+      "image/jpeg",
+
+      0.7
+
+    );
+
+
+  tutupKamera();
+
+
+  prosesAbsen(foto);
+
+}
+
+
+
+
+// ======================
+// PROSES ABSEN
+// ======================
+
+async function prosesAbsen(
+  foto = ""
+){
+
+  const nama =
+
+    document
+    .getElementById(
+      "nama"
+    )
+    .value;
+
+
+  const pin =
+
+    document
+    .getElementById(
+      "pin"
+    )
+    .value;
+
+
+  const shiftHari =
+
+    document
+    .getElementById(
+      "shiftHari"
+    )
+    .value;
+
+
+
+  if(
+
+    !nama ||
+
+    !pin ||
+
+    !shiftHari
+
+  ){
+
+    alert(
+      "Lengkapi data"
+    );
+
+    return;
+
+  }
+
+
+
+  document
+  .getElementById(
+    "hasil"
+  )
+
+  .innerHTML =
+
+  "Memproses absensi...";
+
+
+
+  let status =
+    "Masuk";
+
+
+
+  try{
+
+    const response =
+
+      await fetch(
+
+        url +
+
+        "?cek=" +
+
+        encodeURIComponent(
+          nama
+        )
+
+      );
+
+
+    const hasil =
+      await response.text();
+
+
+    if(
+
+      hasil ===
+      "BELUM_PULANG"
+
+    ){
+
+      status =
+        "Pulang";
+
+    }
+
+  }
+
+  catch(error){
+
+  }
+
+
+
+
+  navigator
+  .geolocation
+  .getCurrentPosition(
+
+    async function(position){
+
+      const lokasi =
+
+        position
+        .coords
+        .latitude +
+
+        "," +
+
+        position
+        .coords
+        .longitude;
+
+
+
+      try{
+
+        const response =
+
+          await fetch(
+
+            url,
+
+            {
+
+              method:"POST",
+
+              body:JSON.stringify({
+
+                nama:nama,
+
+                pin:pin,
+
+                status:status,
+
+                lokasi:lokasi,
+
+                foto:foto,
+
+                shiftHari:shiftHari
+
+              })
+
+            }
+
+          );
+
+
+
+        const hasil =
+          await response.text();
+
+
+
+        document
+        .getElementById(
+          "hasil"
+        )
+
+        .innerHTML =
+
+        hasil;
+
+
+
+        document
+        .getElementById(
+          "pin"
+        )
+        .value = "";
+
+
+
+        updateTombol();
+
+      }
+
+      catch(error){
+
+        document
+        .getElementById(
+          "hasil"
+        )
+
+        .innerHTML =
+
+        "Gagal kirim data";
+
+      }
+
+    },
+
+
+    function(error){
+
+      document
+      .getElementById(
+        "hasil"
+      )
+
+      .innerHTML =
+
+      "GPS tidak diizinkan";
+
+    },
+
+
+    {
+
+      enableHighAccuracy:true
+
+    }
+
+  );
+
+}
+
+
+
+
+// ======================
+// EVENT PILIH NAMA
+// ======================
+
+document
+.getElementById(
+  "nama"
+)
+
+.addEventListener(
+
+  "change",
+
+  function(){
+
+    updateTombol();
+
+  }
+
+);
+
+
+
+
+// ======================
+// START
+// ======================
+
+loadRelawan();
+
+
+</script>
+<script>
+
+if("serviceWorker" in navigator){
+
+  navigator.serviceWorker
+  .register("./sw.js");
+
+}
+
+</script>
+</body>
+</html>
