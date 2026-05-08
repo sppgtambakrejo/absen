@@ -7,184 +7,310 @@
 
 <title>Dashboard Admin SPPG TAMBAKREJO</title>
 
+<meta name="theme-color" content="#111111">
+<meta name="apple-mobile-web-app-capable" content="yes">
+
 <style>
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
 
 body{
   font-family:Arial,sans-serif;
   background:#f4f4f4;
-  margin:0;
-  padding:20px;
+  color:#111;
+  padding:16px;
 }
 
+/* =========================
+   LOGIN
+========================= */
+
 #loginBox{
-
-  max-width:320px;
-
-  margin:80px auto;
-
+  width:100%;
+  max-width:360px;
+  margin:70px auto;
   background:white;
-
   padding:24px;
-
-  border-radius:20px;
-
-  box-shadow:
-  0 4px 20px rgba(0,0,0,0.08);
-
+  border-radius:24px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.08);
 }
 
 #loginBox h2{
-
-  margin-bottom:20px;
-
   text-align:center;
-
+  margin-bottom:20px;
+  font-size:24px;
 }
 
 #loginBox input{
-
   width:100%;
-
   padding:14px;
-
-  border-radius:12px;
-
+  border-radius:14px;
   border:1px solid #ddd;
-
   margin-bottom:14px;
-
   font-size:16px;
-
-  box-sizing:border-box;
-
 }
 
 #loginBox button{
-
   width:100%;
-
 }
 
-h1{
-  margin-bottom:8px;
-}
+/* =========================
+   HEADER
+========================= */
 
-.subtitle{
-  color:#666;
+.top-header{
   margin-bottom:24px;
 }
 
+.top-header h1{
+  font-size:28px;
+  line-height:1.3;
+  margin-bottom:6px;
+}
+
+.subtitle{
+  color:#777;
+  font-size:14px;
+}
+
+/* =========================
+   CARD STATS
+========================= */
+
 .card-wrap{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
   gap:16px;
   margin-bottom:24px;
 }
 
 .card{
   background:white;
+  border-radius:22px;
   padding:20px;
-  border-radius:18px;
-  box-shadow:0 2px 10px rgba(0,0,0,0.06);
+  box-shadow:0 4px 14px rgba(0,0,0,0.06);
 }
 
 .card h2{
-  margin:0;
-  font-size:34px;
+  font-size:32px;
+  margin-bottom:6px;
 }
 
 .card p{
-  margin-top:8px;
   color:#666;
+  font-size:14px;
 }
+
+/* =========================
+   FILTER
+========================= */
 
 .filter-box{
   display:flex;
-  gap:12px;
   flex-wrap:wrap;
-  margin-bottom:20px;
+  gap:12px;
+  margin-bottom:22px;
+}
+
+.filter-box select,
+.filter-box button{
+  flex:1;
+  min-width:140px;
 }
 
 select,
 button{
-  padding:12px;
-  border-radius:12px;
-  border:1px solid #ddd;
+  padding:13px;
+  border-radius:14px;
+  border:none;
   font-size:15px;
+}
+
+select{
+  background:white;
+  border:1px solid #ddd;
 }
 
 button{
   background:#111;
   color:white;
-  border:none;
   cursor:pointer;
+  font-weight:bold;
 }
 
-.table-wrap{
-  overflow-x:auto;
+/* =========================
+   ABSENSI CARD
+========================= */
+
+.mobile-card-wrap{
+  display:flex;
+  flex-direction:column;
+  gap:16px;
 }
 
-table{
-  width:100%;
-  border-collapse:collapse;
+.absen-card{
   background:white;
-  border-radius:18px;
-  overflow:hidden;
+  border-radius:24px;
+  padding:18px;
+  box-shadow:0 4px 14px rgba(0,0,0,0.06);
 }
 
-th{
-  background:#111;
-  color:white;
-  padding:14px;
-  text-align:left;
+.card-top{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  margin-bottom:18px;
 }
 
-td{
-  padding:14px;
-  border-bottom:1px solid #eee;
+.card-photo{
+  width:68px;
+  height:68px;
+  border-radius:20px;
+  object-fit:cover;
+  background:#eee;
+  flex-shrink:0;
+}
+
+.card-user{
+  flex:1;
+  min-width:0;
+}
+
+.card-user h3{
+  font-size:17px;
+  margin-bottom:4px;
+}
+
+.card-user p{
+  font-size:13px;
+  color:#777;
+}
+
+.card-status{
+  margin-top:10px;
 }
 
 .status-aktif{
-
   background:#e8f5e9;
-
   color:#2e7d32;
-
-  padding:6px 12px;
-
+  padding:7px 12px;
   border-radius:999px;
-
-  font-size:13px;
-
+  font-size:12px;
   font-weight:bold;
-
   display:inline-block;
-
 }
 
 .status-pulang{
-
   background:#ffebee;
-
   color:#c62828;
-
-  padding:6px 12px;
-
+  padding:7px 12px;
   border-radius:999px;
-
-  font-size:13px;
-
+  font-size:12px;
   font-weight:bold;
-
   display:inline-block;
-
 }
+
+.card-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+}
+
+.info-box{
+  background:#f7f7f7;
+  padding:14px;
+  border-radius:18px;
+}
+
+.info-label{
+  font-size:12px;
+  color:#888;
+  margin-bottom:6px;
+}
+
+.info-value{
+  font-size:14px;
+  font-weight:600;
+  word-break:break-word;
+}
+
+.map-btn{
+  display:block;
+  width:100%;
+  margin-top:16px;
+  text-align:center;
+  background:#111;
+  color:white;
+  text-decoration:none;
+  padding:13px;
+  border-radius:16px;
+  font-size:14px;
+  font-weight:bold;
+}
+
+/* =========================
+   FOOTER
+========================= */
 
 .footer{
   text-align:center;
-  margin-top:24px;
+  margin-top:26px;
   color:#999;
   font-size:12px;
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media(max-width:768px){
+
+  body{
+    padding:12px;
+  }
+
+  .top-header h1{
+    font-size:22px;
+  }
+
+  .card-wrap{
+    grid-template-columns:1fr;
+  }
+
+  .filter-box{
+    flex-direction:column;
+  }
+
+  .filter-box select,
+  .filter-box button{
+    width:100%;
+  }
+
+}
+
+@media(max-width:480px){
+
+  .card-grid{
+    grid-template-columns:1fr;
+  }
+
+  .card-photo{
+    width:60px;
+    height:60px;
+  }
+
+  .card{
+    padding:18px;
+  }
+
+  .card h2{
+    font-size:28px;
+  }
+
 }
 
 </style>
@@ -192,7 +318,9 @@ td{
 </head>
 <body>
 
-
+<!-- =========================
+     LOGIN
+========================= -->
 
 <div id="loginBox">
 
@@ -211,12 +339,13 @@ Masuk Dashboard
 
 </div>
 
-
-
-
+<!-- =========================
+     DASHBOARD
+========================= -->
 
 <div id="dashboardBox" style="display:none;">
 
+<div class="top-header">
 
 <h1>
 Dashboard Admin SPPG TAMBAKREJO
@@ -226,7 +355,11 @@ Dashboard Admin SPPG TAMBAKREJO
 Monitoring Absensi Relawan
 </div>
 
+</div>
 
+<!-- =========================
+     STATS
+========================= -->
 
 <div class="card-wrap">
 
@@ -247,8 +380,9 @@ Monitoring Absensi Relawan
 
 </div>
 
-
-
+<!-- =========================
+     FILTER
+========================= -->
 
 <div class="filter-box">
 
@@ -270,39 +404,16 @@ Export Excel
 
 </div>
 
+<!-- =========================
+     CARD LIST
+========================= -->
 
-
-
-
-<div class="table-wrap">
-
-<table>
-
-<thead>
-<tr>
-
-<th>Shift</th>
-<th>Nama</th>
-<th>Divisi</th>
-<th>Masuk</th>
-<th>Pulang</th>
-<th>Status</th>
-<th>Total Kerja</th>
-<th>Lokasi</th>
-<th>Foto</th>
-
-</tr>
-</thead>
-
-<tbody id="tbody">
-</tbody>
-
-</table>
-
+<div id="cardContainer" class="mobile-card-wrap">
 </div>
 
-
-
+<!-- =========================
+     FOOTER
+========================= -->
 
 <div class="footer">
 © 2026 F_
@@ -310,13 +421,7 @@ Export Excel
 
 </div>
 
-
-
-
-
 <script>
-
-
 
 // ======================
 // URL APPS SCRIPT
@@ -325,56 +430,32 @@ Export Excel
 const url =
 "https://script.google.com/macros/s/AKfycbzJ2x2vUT9MONWSLnGMKiZI0voXR-gwehFT9-5gE3b9abYhI55veyYV6iTx0W9MrDqp/exec";
 
-
-
-
 // ======================
 // PIN ADMIN
 // ======================
 
-const ADMIN_PIN =
-"666";
-
-
-
+const ADMIN_PIN = "666";
 
 // ======================
-// LOGIN ADMIN
+// LOGIN
 // ======================
 
 function loginAdmin(){
 
   const pin =
-
-    document
-    .getElementById(
-      "adminPin"
-    )
-    .value;
-
-
+  document
+  .getElementById("adminPin")
+  .value;
 
   if(pin === ADMIN_PIN){
 
     document
-    .getElementById(
-      "loginBox"
-    )
-    .style.display =
-
-    "none";
-
-
+    .getElementById("loginBox")
+    .style.display = "none";
 
     document
-    .getElementById(
-      "dashboardBox"
-    )
-    .style.display =
-
-    "block";
-
-
+    .getElementById("dashboardBox")
+    .style.display = "block";
 
     loadData();
 
@@ -382,16 +463,11 @@ function loginAdmin(){
 
   else{
 
-    alert(
-      "PIN Admin Salah"
-    );
+    alert("PIN Admin Salah");
 
   }
 
 }
-
-
-
 
 // ======================
 // LOAD DATA
@@ -402,42 +478,27 @@ async function loadData(){
   try{
 
     const response =
-
-      await fetch(
-
-        url + "?dashboard=1"
-
-      );
-
-
+    await fetch(
+      url + "?dashboard=1"
+    );
 
     const data =
-      await response.json();
+    await response.json();
 
+    const container =
+    document.getElementById(
+      "cardContainer"
+    );
 
-
-    const tbody =
-      document.getElementById(
-        "tbody"
-      );
-
-
-    tbody.innerHTML = "";
-
-
+    container.innerHTML = "";
 
     let belumPulang = 0;
 
-
     const divisiSet =
-      new Set();
-
+    new Set();
 
     const shiftSet =
-      new Set();
-
-
-
+    new Set();
 
     data.forEach(item => {
 
@@ -449,10 +510,7 @@ async function loadData(){
         item.shift
       );
 
-
-      if(
-        item.pulang === ""
-      ){
+      if(item.pulang === ""){
 
         belumPulang++;
 
@@ -460,141 +518,63 @@ async function loadData(){
 
     });
 
-
-
+    document
+    .getElementById("totalHadir")
+    .innerHTML = data.length;
 
     document
-    .getElementById(
-      "totalHadir"
-    )
-    .innerHTML =
-
-    data.length;
-
-
-
+    .getElementById("belumPulang")
+    .innerHTML = belumPulang;
 
     document
-    .getElementById(
-      "belumPulang"
-    )
-    .innerHTML =
-
-    belumPulang;
-
-
-
-
-    document
-    .getElementById(
-      "totalDivisi"
-    )
-    .innerHTML =
-
-    divisiSet.size;
-
-
-
-
+    .getElementById("totalDivisi")
+    .innerHTML = divisiSet.size;
 
     isiFilterShift(
       [...shiftSet]
     );
 
-
     isiFilterDivisi(
       [...divisiSet]
     );
 
-
-
-
     const filterShift =
-
-      document
-      .getElementById(
-        "filterShift"
-      )
-      .value;
-
-
-
+    document
+    .getElementById(
+      "filterShift"
+    )
+    .value;
 
     const filterDivisi =
-
-      document
-      .getElementById(
-        "filterDivisi"
-      )
-      .value;
-
-
-
-
+    document
+    .getElementById(
+      "filterDivisi"
+    )
+    .value;
 
     const filtered =
+    data.filter(item => {
 
-      data.filter(item => {
+      const cocokShift =
+      !filterShift ||
+      item.shift === filterShift;
 
+      const cocokDivisi =
+      !filterDivisi ||
+      item.divisi === filterDivisi;
 
-        const cocokShift =
+      return (
+        cocokShift &&
+        cocokDivisi
+      );
 
-          !filterShift ||
-
-          item.shift ===
-          filterShift;
-
-
-
-        const cocokDivisi =
-
-          !filterDivisi ||
-
-          item.divisi ===
-          filterDivisi;
-
-
-
-
-        return (
-
-          cocokShift &&
-
-          cocokDivisi
-
-        );
-
-      });
-
-
-
-
-
+    });
 
     filtered.forEach(item => {
 
-      const tr =
-        document
-        .createElement("tr");
+      const statusHTML =
 
-
-
-      tr.innerHTML = `
-
-      <td>${item.shift}</td>
-
-      <td>${item.nama}</td>
-
-      <td>${item.divisi}</td>
-
-      <td>${formatJam(item.masuk)}</td>
-
-      <td>${item.pulang ? formatJam(item.pulang) : "-"}</td>
-
-
-      <td>
-
-      ${item.pulang === ""
+      item.pulang === ""
 
       ?
 
@@ -602,43 +582,113 @@ async function loadData(){
 
       :
 
-      '<span class="status-pulang">🔴 Sudah Pulang</span>'}
+      '<span class="status-pulang">🔴 Sudah Pulang</span>';
 
-      </td>
+      const foto = item.foto
+      ? item.foto
+      : "https://via.placeholder.com/100";
 
+      const card =
+      document.createElement("div");
 
-      <td>
+      card.className =
+      "absen-card";
 
-      ${hitungDurasi(
-        item.masuk,
-        item.pulang
-      )}
+      card.innerHTML = `
 
-      </td>
+      <div class="card-top">
 
+        <img
+        src="${foto}"
+        class="card-photo">
 
-      <td>
+        <div class="card-user">
 
-      <a href="https://maps.google.com/?q=${item.lokasi}" target="_blank">
+          <h3>${item.nama}</h3>
 
-      Lihat
+          <p>
+          ${item.divisi}
+          •
+          ${item.shift}
+          </p>
+
+          <div class="card-status">
+          ${statusHTML}
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="card-grid">
+
+        <div class="info-box">
+
+          <div class="info-label">
+          Jam Masuk
+          </div>
+
+          <div class="info-value">
+          ${formatJam(item.masuk)}
+          </div>
+
+        </div>
+
+        <div class="info-box">
+
+          <div class="info-label">
+          Jam Pulang
+          </div>
+
+          <div class="info-value">
+          ${item.pulang
+          ? formatJam(item.pulang)
+          : "-"}
+          </div>
+
+        </div>
+
+        <div class="info-box">
+
+          <div class="info-label">
+          Total Kerja
+          </div>
+
+          <div class="info-value">
+          ${hitungDurasi(
+            item.masuk,
+            item.pulang
+          )}
+          </div>
+
+        </div>
+
+        <div class="info-box">
+
+          <div class="info-label">
+          Lokasi
+          </div>
+
+          <div class="info-value">
+          Tersimpan
+          </div>
+
+        </div>
+
+      </div>
+
+      <a
+      href="https://maps.google.com/?q=${item.lokasi}"
+      target="_blank"
+      class="map-btn">
+
+      📍 Lihat Lokasi
 
       </a>
 
-      </td>
-
-
-      <td>
-
-      ${item.foto}
-
-      </td>
-
       `;
 
-
-
-      tbody.appendChild(tr);
+      container.appendChild(card);
 
     });
 
@@ -654,9 +704,6 @@ async function loadData(){
 
 }
 
-
-
-
 // ======================
 // FILTER SHIFT
 // ======================
@@ -664,48 +711,29 @@ async function loadData(){
 function isiFilterShift(data){
 
   const select =
+  document.getElementById(
+    "filterShift"
+  );
 
-    document
-    .getElementById(
-      "filterShift"
-    );
-
-
-  if(
-    select.options.length > 1
-  ){
+  if(select.options.length > 1){
     return;
   }
-
-
 
   data.forEach(item => {
 
     const option =
-
-      document
-      .createElement(
-        "option"
-      );
-
-
-    option.value =
-      item;
-
-    option.text =
-      item;
-
-
-    select.appendChild(
-      option
+    document.createElement(
+      "option"
     );
+
+    option.value = item;
+    option.text = item;
+
+    select.appendChild(option);
 
   });
 
 }
-
-
-
 
 // ======================
 // FILTER DIVISI
@@ -714,48 +742,29 @@ function isiFilterShift(data){
 function isiFilterDivisi(data){
 
   const select =
+  document.getElementById(
+    "filterDivisi"
+  );
 
-    document
-    .getElementById(
-      "filterDivisi"
-    );
-
-
-  if(
-    select.options.length > 1
-  ){
+  if(select.options.length > 1){
     return;
   }
-
-
 
   data.forEach(item => {
 
     const option =
-
-      document
-      .createElement(
-        "option"
-      );
-
-
-    option.value =
-      item;
-
-    option.text =
-      item;
-
-
-    select.appendChild(
-      option
+    document.createElement(
+      "option"
     );
+
+    option.value = item;
+    option.text = item;
+
+    select.appendChild(option);
 
   });
 
 }
-
-
-
 
 // ======================
 // FORMAT JAM
@@ -767,112 +776,72 @@ function formatJam(value){
     return "-";
   }
 
-
   const date =
-    new Date(value);
-
+  new Date(value);
 
   if(isNaN(date)){
     return value;
   }
-
 
   return date.toLocaleTimeString(
 
     "id-ID",
 
     {
-
       hour:"2-digit",
-
       minute:"2-digit"
-
     }
 
   );
 
 }
 
-
-
-
 // ======================
 // HITUNG DURASI
 // ======================
 
 function hitungDurasi(
-
   masuk,
   pulang
-
 ){
 
   if(!masuk || !pulang){
-
     return "-";
-
   }
 
-
-
   const jamMasuk =
-    new Date(masuk);
-
+  new Date(masuk);
 
   const jamPulang =
-    new Date(pulang);
-
-
+  new Date(pulang);
 
   if(
     isNaN(jamMasuk) ||
     isNaN(jamPulang)
   ){
-
     return "-";
-
   }
 
-
-
   let selisih =
-
-    (jamPulang - jamMasuk)
-
-    / 1000;
-
-
+  (jamPulang - jamMasuk)
+  / 1000;
 
   const jam =
-
-    Math.floor(
-      selisih / 3600
-    );
-
-
+  Math.floor(
+    selisih / 3600
+  );
 
   const menit =
-
-    Math.floor(
-
-      (selisih % 3600)
-
-      / 60
-
-    );
-
-
+  Math.floor(
+    (selisih % 3600)
+    / 60
+  );
 
   return `
-
   ${jam}j ${menit}m
-
   `;
 
 }
-
-
-
 
 // ======================
 // EXPORT EXCEL
@@ -880,94 +849,20 @@ function hitungDurasi(
 
 function exportExcel(){
 
-  const table =
-
-    document.querySelector(
-      "table"
-    );
-
-
-  let html =
-
-    table.outerHTML;
-
-
-
-  html = html.replace(
-    /<a[^>]*>|<\/a>/g,
-    ""
-  );
-
-
-
-  const blob =
-
-    new Blob(
-
-      [html],
-
-      {
-
-        type:
-        "application/vnd.ms-excel"
-
-      }
-
-    );
-
-
-
-  const urlBlob =
-
-    URL.createObjectURL(
-      blob
-    );
-
-
-
-  const a =
-    document.createElement(
-      "a"
-    );
-
-
-
-  a.href =
-    urlBlob;
-
-
-
-  a.download =
-
-    "rekap-absensi.xls";
-
-
-
-  a.click();
-
-
-
-  URL.revokeObjectURL(
-    urlBlob
+  alert(
+    "Gunakan versi tabel untuk export excel."
   );
 
 }
-
-
-
 
 // ======================
 // AUTO REFRESH
 // ======================
 
 setInterval(
-
   loadData,
-
   30000
-
 );
-
 
 </script>
 
