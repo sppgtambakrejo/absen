@@ -584,10 +584,31 @@ async function loadData(){
 
       '<span class="status-pulang">🔴 Sudah Pulang</span>';
 
-      const foto =
-item.foto.match(/src="([^"]+)"/)?.[1]
-||
-"https://via.placeholder.com/100";
+      let foto = "https://via.placeholder.com/100";
+
+if(item.foto){
+
+  const match =
+  item.foto.match(/src="([^"]+)"/);
+
+  if(match){
+
+    foto = match[1];
+
+  }
+
+  // convert google drive link
+  const driveMatch =
+  foto.match(/\/d\/(.*?)\//);
+
+  if(driveMatch){
+
+    foto =
+    https://lh3.googleusercontent.com/d/${driveMatch[1]};
+
+  }
+
+}
       
       const card =
       document.createElement("div");
