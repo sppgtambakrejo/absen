@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Payroll Relawan</title>
+
+  <link rel="stylesheet" href="payroll.css" />
+</head>
+<body>
+
+  <div class="page-wrapper">
+
+    <header class="topbar">
+      <div>
+        <h1>Payroll Relawan</h1>
+        <p>Kelola slip gaji dan rekap payroll relawan</p>
+      </div>
+
+      <a href="admin.html" class="back-btn">← Kembali Dashboard</a>
+    </header>
+<section class="setting-grid">
+
+  <div class="setting-card">
+    <h2>Setting Gaji Divisi</h2>
+    <p>Atur standar gaji harian berdasarkan divisi.</p>
+
+    <div id="gajiDivisiList" class="setting-list">
+      Memuat setting gaji divisi...
+    </div>
+  </div>
+
+  <div class="setting-card">
+    <h2>Setting Gaji Relawan</h2>
+    <p>Atur apakah relawan ikut gaji divisi atau punya gaji khusus.</p>
+
+    <div id="gajiRelawanList" class="setting-list">
+      Memuat setting gaji relawan...
+    </div>
+  </div>
+
+</section>
+    <section class="filter-card">
+      <div class="filter-group">
+        <label>Periode Awal</label>
+        <input type="date" id="tanggalAwal">
+      </div>
+
+      <div class="filter-group">
+        <label>Periode Akhir</label>
+        <input type="date" id="tanggalAkhir">
+      </div>
+
+
+      <button id="btnLoadPayroll">Load Payroll</button>
+    </section>
+<section class="total-payroll-card">
+
+  <div>
+    <span>Total Gaji Dibayarkan</span>
+
+    <h1 id="grandTotalPayroll">
+      Rp0
+    </h1>
+  </div>
+
+</section>
+    <section class="table-card">
+      <div class="table-header">
+        <h2>Data Payroll</h2>
+
+        <div class="action-buttons">
+          <button id="btnPrintSelected">Print Terpilih</button>
+          <button id="btnPrintAll">Print Semua</button>
+          <button id="btnSimpanPayroll">
+  Simpan Payroll
+</button>
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>
+                <input type="checkbox" id="checkAll">
+              </th>
+              <th>Nama</th>
+              <th>Divisi</th>
+              <th>Jumlah Hadir</th>
+              <th>Mode Gaji</th>
+              <th>Tarif</th>
+              <th>Total Gaji</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+
+          <tbody id="payrollBody">
+            <tr>
+              <td colspan="8" class="empty">Belum ada data payroll</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </div>
+
+  <section id="printArea" class="print-area"></section>
+
+  <script type="module" src="payroll.js"></script>
+</body>
+</html>

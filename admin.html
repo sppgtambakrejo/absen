@@ -1,0 +1,453 @@
+<!-- admin.html -->
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>
+Dashboard Admin SPPG
+</title>
+
+<link
+rel="stylesheet"
+href="admin.css">
+
+<link
+rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+</head>
+
+<body>
+
+
+
+<!-- ======================
+TOPBAR
+====================== -->
+
+<header class="admin-topbar">
+
+  <div class="brand">
+
+    <img
+    src="logo.png"
+    class="brand-logo">
+
+    <div>
+
+      <h1>
+        Monitoring Absensi
+      </h1>
+
+      <p>
+        SPPG Tambakrejo Tempel
+      </p>
+
+    </div>
+
+  </div>
+
+  <button
+  id="btnLogout"
+  class="logout-btn">
+
+    <i class="fa-solid fa-right-from-bracket"></i>
+    Logout
+
+  </button>
+
+</header>
+
+
+
+<!-- ======================
+LAYOUT
+====================== -->
+
+<main class="admin-layout">
+
+
+
+<!-- ======================
+SIDEBAR
+====================== -->
+
+<aside class="sidebar">
+
+  <button class="menu-item active">
+
+    <i class="fa-solid fa-chart-line"></i>
+    Monitoring
+
+  </button>
+
+  <button class="menu-item">
+
+    <i class="fa-solid fa-users"></i>
+    Data Relawan
+
+  </button>
+
+  <button class="menu-item">
+
+    <i class="fa-solid fa-file-export"></i>
+    Export
+
+  </button>
+
+  <a href="payroll.html" class="menu-item">
+
+  <i class="fa-solid fa-money-check-dollar"></i>
+  Payroll
+
+</a>
+
+  <button class="menu-item">
+
+    <i class="fa-solid fa-gear"></i>
+    Setting
+
+  </button>
+
+</aside>
+
+
+
+<!-- ======================
+CONTENT
+====================== -->
+
+<section class="content">
+
+
+
+<!-- FILTER -->
+
+<div class="filter-card">
+
+  <select id="filterDivisi">
+
+    <option value="semua">
+      Semua Divisi
+    </option>
+
+  </select>
+
+  <input type="date" id="filterHari">
+
+  <input
+  type="text"
+  id="searchRelawan"
+  placeholder="Cari relawan...">
+
+  <button
+id="btnAbsenManual"
+class="export-btn">
+
+  <i class="fa-solid fa-user-clock"></i>
+  Absen Manual
+
+</button>
+
+</div>
+
+
+
+<!-- STATS -->
+
+<div class="stats-grid">
+
+  <div class="stat-card">
+
+    <span>Total Hadir</span>
+
+    <h2 id="totalHadir">
+      0
+    </h2>
+
+  </div>
+
+  <div class="stat-card">
+
+    <span>Belum Pulang</span>
+
+    <h2 id="belumPulang">
+      0
+    </h2>
+
+  </div>
+
+  <div class="stat-card">
+
+    <span>Sudah Pulang</span>
+
+    <h2 id="sudahPulang">
+      0
+    </h2>
+
+  </div>
+
+  <div class="stat-card">
+
+    <span>Total Divisi</span>
+
+    <h2 id="totalDivisi">
+      0
+    </h2>
+
+  </div>
+
+</div>
+
+
+
+<!-- MONITORING -->
+
+<section
+id="monitoringList"
+class="monitoring-list">
+
+  <div class="empty-state">
+    Memuat data absensi...
+  </div>
+
+</section>
+<section id="relawanPanel" class="panel-hidden">
+
+  <div class="panel-card">
+
+    <h2>Data Relawan</h2>
+    <p>Kelola data relawan, divisi, dan PIN absensi.</p>
+
+    <div class="form-grid">
+
+      <input type="text" id="namaRelawan" placeholder="Nama Relawan">
+
+      <select id="divisiRelawan">
+        <option value="">Pilih Divisi</option>
+      </select>
+
+      <input type="text" id="pinRelawan" placeholder="PIN Relawan">
+
+      <button id="btnTambahRelawan">
+        <i class="fa-solid fa-plus"></i>
+        Tambah Relawan
+      </button>
+
+    </div>
+
+  </div>
+
+  <div class="panel-card">
+
+    <input
+    type="text"
+    id="searchDataRelawan"
+    placeholder="Cari relawan...">
+
+    <div id="listDataRelawan" class="data-relawan-list">
+      Memuat data relawan...
+    </div>
+
+  </div>
+
+</section>
+</section>
+<section id="settingPanel" class="panel-hidden">
+
+  <div class="panel-card">
+
+    <h2>Setting Lokasi Absen</h2>
+    <p>Atur titik lokasi dapur dan radius maksimal absensi.</p>
+
+    <div class="form-grid">
+
+      <input
+      type="text"
+      id="settingNamaLokasi"
+      placeholder="Nama Lokasi">
+
+      <input
+      type="number"
+      id="settingLatitude"
+      placeholder="Latitude"
+      step="any">
+
+      <input
+      type="number"
+      id="settingLongitude"
+      placeholder="Longitude"
+      step="any">
+
+      <input
+      type="number"
+      id="settingRadius"
+      placeholder="Radius Meter">
+
+      <button id="btnAmbilLokasi">
+        <i class="fa-solid fa-location-crosshairs"></i>
+        Ambil Lokasi Saat Ini
+      </button>
+
+      <button id="btnSimpanLokasi">
+        <i class="fa-solid fa-floppy-disk"></i>
+        Simpan Lokasi
+      </button>
+
+    </div>
+
+  </div>
+
+</section>
+</main>
+
+
+
+<!-- ======================
+MOBILE NAV
+====================== -->
+
+<nav class="mobile-nav">
+
+  <button class="active">
+
+    <i class="fa-solid fa-chart-line"></i>
+
+    <span>
+      Monitor
+    </span>
+
+  </button>
+
+  <button>
+
+    <i class="fa-solid fa-users"></i>
+
+    <span>
+      Relawan
+    </span>
+
+  </button>
+
+  <button>
+
+    <i class="fa-solid fa-file-export"></i>
+
+    <span>
+      Export
+    </span>
+
+  </button>
+
+  <a href="payroll.html" class="mobile-link">
+
+  <i class="fa-solid fa-money-check-dollar"></i>
+
+  <span>
+    Payroll
+  </span>
+
+</a>
+
+      <button>
+
+    <i class="fa-solid fa-gear"></i>
+
+    <span>
+      Setting
+    </span>
+
+  </button>
+
+</nav>
+
+<div id="manualModal" class="manual-modal">
+
+  <div class="manual-box">
+
+    <div class="manual-header">
+      <h2>Absen Manual</h2>
+
+      <button id="closeManualModal">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <select id="manualDivisi">
+      <option value="">Pilih Divisi</option>
+    </select>
+
+    <select id="manualRelawan">
+      <option value="">Pilih Relawan</option>
+    </select>
+
+    <select id="manualTipe">
+  <option value="">Pilih Tipe Absen</option>
+  <option value="masuk">Masuk</option>
+  <option value="pulang">Pulang</option>
+  <option value="tidak_hadir">Tidak Hadir</option>
+</select>
+
+    <label class="manual-label">Tanggal Jadwal Kerja</label>
+<input type="date" id="manualTanggalJadwal">
+<div id="manualRealtimeGroup">
+<label class="manual-label">Tanggal Real Absen</label>
+<input type="date" id="manualTanggal">
+
+<label class="manual-label">Jam Real Absen</label>
+<input type="time" id="manualJam">
+  </div>
+    <textarea
+id="manualKeterangan"
+placeholder="Keterangan tidak hadir / catatan admin"
+class="manual-textarea"></textarea>
+
+    <button id="btnSimpanManual" class="btn-save-manual">
+      Simpan Absen Manual
+    </button>
+
+  </div>
+
+</div>
+
+<div id="exportModal" class="manual-modal">
+
+  <div class="manual-box">
+
+    <div class="manual-header">
+      <h2>Export Laporan</h2>
+
+      <button id="closeExportModal">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <label class="manual-label">Tanggal Awal</label>
+    <input type="date" id="exportStartDate">
+
+    <label class="manual-label">Tanggal Akhir</label>
+    <input type="date" id="exportEndDate">
+
+    <button id="btnDownloadExcel" class="btn-save-manual">
+      Download Excel
+    </button>
+
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+
+<script
+type="module"
+src="admin.js"></script>
+
+</body>
+</html>

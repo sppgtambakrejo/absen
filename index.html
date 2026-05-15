@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+  <title>Absensi Relawan SPPG</title>
+
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#111111">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+
+<body class="mobile-body">
+
+  <main class="native-app">
+
+    <section class="native-header">
+      <img src="logo.png" class="native-logo">
+
+      <h1>Absensi Relawan SPPG</h1>
+      <h2>TAMBAKREJO TEMPEL</h2>
+
+      <p>
+        Proses trial dulu ya gaes.<br>
+        Gunakan Google Chrome, izinkan <span>Kamera dan Lokasi.</span>
+      </p>
+    </section>
+
+    <section class="native-card">
+
+      <div class="native-field">
+        <i class="fa-solid fa-building"></i>
+        <select id="divisi">
+          <option value="">Pilih Divisi</option>
+        </select>
+      </div>
+
+      <div class="native-field">
+        <i class="fa-solid fa-user"></i>
+        <select id="relawan">
+          <option value="">Pilih Nama Relawan</option>
+        </select>
+      </div>
+
+      <div class="native-field">
+        <i class="fa-solid fa-calendar-days"></i>
+        <select id="hari">
+          <option value="">Pilih Hari</option>
+        </select>
+      </div>
+
+      <div class="native-field">
+        <i class="fa-solid fa-lock"></i>
+        <input type="password" id="pin" placeholder="Masukkan PIN">
+      </div>
+
+      <button id="btnMasuk" class="native-btn masuk">
+        <i class="fa-solid fa-camera"></i>
+        FOTO & ABSEN MASUK
+      </button>
+
+      <button id="btnPulang" class="native-btn pulang">
+        <i class="fa-solid fa-right-from-bracket"></i>
+        ABSEN PULANG
+      </button>
+
+      <div id="kameraBox" class="kamera-box" style="display:none;">
+        <video id="video" autoplay playsinline></video>
+
+        <button id="btnAmbilFoto" class="native-btn kamera">
+          <i class="fa-solid fa-camera-retro"></i>
+          AMBIL FOTO
+        </button>
+      </div>
+
+      <canvas id="canvas" style="display:none;"></canvas>
+
+      <p id="status" class="native-status">Menyiapkan sistem absensi...</p>
+
+    </section>
+
+    <footer class="native-footer">
+      © 2026 SPPG Tambakrejo Tempel<br>
+      Sistem Absensi Relawan
+    </footer>
+
+  </main>
+
+  <script type="module" src="app.js?v=3"></script>
+
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("./sw.js");
+    }
+  </script>
+
+</body>
+</html>
