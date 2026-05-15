@@ -358,7 +358,7 @@ function compressImage(base64) {
 
 async function uploadFoto(base64, namaRelawan) {
   try {
-    statusText.innerText = "Upload Google Drive...";
+    statusText.innerText = "Proses Verifikasi...";
 
     const namaAman = namaRelawan
       .replace(/\s+/g, "-")
@@ -520,7 +520,7 @@ async function prosesAbsen(tipe, fotoBase64 = "") {
       );
     }
 
-    statusText.innerText = "Menyimpan Firestore...";
+    statusText.innerText = "Menyimpan Data...";
 
     await addDoc(collection(db, "absensi"), {
       relawanId: relawan.id,
