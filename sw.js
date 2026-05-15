@@ -6,6 +6,8 @@ const urlsToCache = [
   "./manifest.json"
 ];
 
+
+// INSTALL
 self.addEventListener("install", event => {
   self.skipWaiting();
 
@@ -16,6 +18,8 @@ self.addEventListener("install", event => {
   );
 });
 
+
+// ACTIVATE
 self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys().then(keys => {
@@ -30,12 +34,24 @@ self.addEventListener("activate", event => {
   );
 });
 
+
+// FETCH
 self.addEventListener("fetch", event => {
   event.respondWith(
     fetch(event.request)
       .then(response => {
         return response;
       })
-      .catch(() => caches.match(event.request))
+      .catch(() => {
+        return caches.match(event.request);
+      })
   );
+});
+
+
+// FORCE UPDATE
+self.addEventListener("message", event => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
 });
