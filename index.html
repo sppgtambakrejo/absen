@@ -23,11 +23,9 @@
 
       <h1>Absensi Relawan SPPG</h1>
       <h2>TAMBAKREJO TEMPEL</h2>
-
-      <p>
-        Proses trial dulu ya gaes.<br>
-        Gunakan Google Chrome, izinkan <span>Kamera dan Lokasi.</span>
-      </p>
+      <<div class="native-info">
+        <p>Pastikan berada di area dapur, GPS aktif, dan foto wajah terlihat jelas.</p>
+      </div>
     </section>
 
     <section class="native-card">
@@ -84,8 +82,7 @@
     </section>
 
     <footer class="native-footer">
-      © 2026 SPPG Tambakrejo Tempel<br>
-      Sistem Absensi Relawan
+      © 2026 /F_
     </footer>
 
   </main>
@@ -94,7 +91,38 @@
 
   <script>
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("./sw.js?v=2");
+  navigator.serviceWorker.register("./sw.js?v=2").then(reg => {
+
+    reg.update();
+
+    reg.addEventListener("updatefound", () => {
+
+      const newWorker = reg.installing;
+
+      newWorker.addEventListener("statechange", () => {
+
+        if (
+          newWorker.state === "installed" &&
+          navigator.serviceWorker.controller
+        ) {
+
+          const update = confirm(
+            "Versi baru aplikasi tersedia.\nRefresh sekarang?"
+          );
+
+          if (update) {
+            newWorker.postMessage({
+              type: "SKIP_WAITING"
+            });
+          }
+        }
+      });
+    });
+  });
+
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    window.location.reload();
+  });
 }
 </script>
 
