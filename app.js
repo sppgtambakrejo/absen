@@ -30,8 +30,8 @@ const WEBAPP_URL =
   "https://script.google.com/macros/s/AKfycbyjinFBRETY1Leixxrc2wAkgAbeZaWjmzTYixXXI9sEb1-eiZRXTefbHVZh31Ccl9rrWw/exec";
 
 const LOKASI_DAPUR = {
-  lat: -7.7475416,
-  lng: 110.3595365
+  lat: -7.689355,
+  lng: 110.299039
 };
 
 const RADIUS_METER = 100;
