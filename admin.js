@@ -97,17 +97,22 @@ const menuButtons = document.querySelectorAll(
 
 const DIVISI_LIST = [
   "Asisten Lapangan",
-  "ADM. Gudang",
   "Persiapan",
+  "Head Chef",
   "Pengolahan",
   "Pemorsian",
   "Distribusi",
   "Pencucian",
   "Kebersihan",
-  "Security",
-  "Content Creator",
+  "Keamanan",
   "Sanitarian"
 ];
+
+const DIVISI_ALIASES = {
+  "adm. gudang": "Persiapan",
+  "content creator": "Persiapan",
+  "security": "Keamanan"
+};
 
 const NAMA_HARI = [
   "Minggu",
@@ -159,6 +164,11 @@ function escapeHtml(value) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+}
+
+function normalizeDivisi(value) {
+  const text = String(value || "").trim();
+  return DIVISI_ALIASES[text.toLowerCase()] || text;
 }
 
 function getTimestampDate(timestamp) {
@@ -356,9 +366,11 @@ function loadAbsensiDariTanggal(tanggalValue) {
     semuaAbsensi = [];
 
     snapshot.forEach((dokumen) => {
+      const data = dokumen.data();
       semuaAbsensi.push({
         id: dokumen.id,
-        ...dokumen.data()
+        ...data,
+        divisi: normalizeDivisi(data.divisi)
       });
     });
 
@@ -372,9 +384,11 @@ async function loadDataRelawan() {
   semuaRelawan = [];
 
   snapshot.forEach((dokumen) => {
+    const data = dokumen.data();
     semuaRelawan.push({
       id: dokumen.id,
-      ...dokumen.data()
+      ...data,
+      divisi: normalizeDivisi(data.divisi)
     });
   });
 
@@ -925,9 +939,11 @@ async function loadDatabaseAbsensi() {
     dataDatabaseAbsensi = [];
 
     snapshot.forEach((dokumen) => {
+      const data = dokumen.data();
       dataDatabaseAbsensi.push({
         id: dokumen.id,
-        ...dokumen.data()
+        ...data,
+        divisi: normalizeDivisi(data.divisi)
       });
     });
 
@@ -1591,9 +1607,11 @@ async function getAbsensiRange(start, end) {
     const snapshot = await getDocs(q);
 
     snapshot.forEach((doc) => {
+      const data = doc.data();
       hasil.push({
         id: doc.id,
-        ...doc.data()
+        ...data,
+        divisi: normalizeDivisi(data.divisi)
       });
     });
 
