@@ -85,7 +85,7 @@ const payload = {
 
 const res = await fetch('https://script.google.com/macros/s/XXX/exec', {
   method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
+  headers: { 'Content-Type': 'text/plain;charset=utf-8' },
   body: JSON.stringify(payload)
 });
 const result = await res.json();
