@@ -902,18 +902,74 @@ SEARCH
   border-radius:22px;
   padding:16px;
   display:grid;
-  grid-template-columns:1fr 1fr 1fr auto;
+  grid-template-columns:minmax(0,1fr) auto auto;
   gap:12px;
   align-items:center;
 }
 
-.data-relawan-card input,
-.data-relawan-card select{
-  width:100%;
-  border:none;
-  background:white;
-  padding:12px;
+.data-relawan-main{
+  min-width:0;
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+
+.data-relawan-avatar{
+  width:46px;
+  height:46px;
   border-radius:14px;
+  background:#e5e7eb;
+  color:#374151;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:900;
+  flex:0 0 auto;
+}
+
+.data-relawan-info{
+  min-width:0;
+}
+
+.data-relawan-info h4{
+  font-size:15px;
+  font-weight:900;
+  color:#111827;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.data-relawan-info p{
+  margin-top:3px;
+  font-size:13px;
+  color:#4b5563;
+}
+
+.relawan-pin{
+  display:inline-flex;
+  margin-top:7px;
+  color:#6b7280;
+  font-size:12px;
+  font-weight:800;
+}
+
+.status-pill{
+  display:inline-flex;
+  justify-content:center;
+  align-items:center;
+  min-width:86px;
+  padding:9px 12px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:900;
+}
+
+.data-relawan-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  flex-wrap:wrap;
 }
 
 .btn-save{
@@ -923,11 +979,24 @@ SEARCH
   padding:12px 14px;
   border-radius:14px;
   font-weight:800;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
 }
 
 @media(max-width:768px){
   .data-relawan-card{
     grid-template-columns:1fr;
+  }
+
+  .data-relawan-actions{
+    justify-content:flex-start;
+  }
+
+  .status-pill{
+    width:max-content;
   }
 }
 
@@ -973,6 +1042,10 @@ SEARCH
   font-weight:800;
 
   cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
 
 }
 
@@ -1051,6 +1124,8 @@ SEARCH
 }
 
 #closeManualModal,
+#closeEditRelawanModal,
+#closeHapusRelawanModal,
 #closeEditAbsensiModal,
 #closeExportModal{
   border:none;
@@ -1060,6 +1135,32 @@ SEARCH
   height:42px;
   border-radius:50%;
   flex:0 0 auto;
+}
+
+.confirm-box{
+  max-width:390px;
+}
+
+.confirm-text{
+  margin:8px 0 18px;
+  color:#4b5563;
+  line-height:1.5;
+}
+
+.confirm-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+
+.btn-cancel{
+  border:none;
+  background:#e5e7eb;
+  color:#111827;
+  padding:12px 14px;
+  border-radius:14px;
+  font-weight:900;
+  cursor:pointer;
 }
 
 .manual-box select,
