@@ -35,6 +35,13 @@ const LOKASI_DAPUR = {
 };
 
 const RADIUS_METER = 100;
+const GPS_SAMPLE_COUNT = 3;
+const GPS_MAX_ACCURACY_METER = 120;
+const GPS_MAX_AGE_MS = 120000;
+const GPS_MAX_SAMPLE_DISTANCE_METER = 180;
+const GPS_MAX_SPEED_METER_PER_SECOND = 35;
+const GPS_SAMPLE_DELAY_MS = 1800;
+const GPS_TIMEOUT_MS = 25000;
 
 const DIVISI_LIST = [
   "Asisten Lapangan",
@@ -253,6 +260,23 @@ function tutupKamera() {
 }
 
 async function getLokasiUser() {
+  const samples = [];
+
+  for (let i = 0; i < GPS_SAMPLE_COUNT; i++) {
+    statusText.innerText = `Mengecek GPS (${i + 1}/${GPS_SAMPLE_COUNT})...`;
+
+    const lokasi = await ambilSampelGps();
+    samples.push(lokasi);
+
+    if (i < GPS_SAMPLE_COUNT - 1) {
+      await delay(GPS_SAMPLE_DELAY_MS);
+    }
+  }
+
+  return validasiGps(samples);
+}
+
+function ambilSampelGps() {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
       reject(new Error("GPS tidak didukung browser ini."));
@@ -261,17 +285,33 @@ async function getLokasiUser() {
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        const coords = position.coords;
+
         resolve({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude
+          lat: coords.latitude,
+          lng: coords.longitude,
+          accuracy: coords.accuracy,
+          altitudeAccuracy: coords.altitudeAccuracy,
+          heading: coords.heading,
+          speed: coords.speed,
+          timestamp: position.timestamp,
+          mocked: Boolean(coords.mocked || coords.isMock || position.mocked)
         });
       },
       () => {
         navigator.geolocation.getCurrentPosition(
           (position) => {
+            const coords = position.coords;
+
             resolve({
-              lat: position.coords.latitude,
-              lng: position.coords.longitude
+              lat: coords.latitude,
+              lng: coords.longitude,
+              accuracy: coords.accuracy,
+              altitudeAccuracy: coords.altitudeAccuracy,
+              heading: coords.heading,
+              speed: coords.speed,
+              timestamp: position.timestamp,
+              mocked: Boolean(coords.mocked || coords.isMock || position.mocked)
             });
           },
           () => {
@@ -279,18 +319,79 @@ async function getLokasiUser() {
           },
           {
             enableHighAccuracy: true,
-            timeout: 15000,
+            timeout: GPS_TIMEOUT_MS,
             maximumAge: 0
           }
         );
       },
       {
-        enableHighAccuracy: false,
-        timeout: 5000,
-        maximumAge: 120000
+        enableHighAccuracy: true,
+        timeout: GPS_TIMEOUT_MS,
+        maximumAge: 0
       }
     );
   });
+}
+
+function delay(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+function validasiGps(samples) {
+  if (!samples.length) {
+    throw new Error("GPS gagal dibaca.");
+  }
+
+  const now = Date.now();
+
+  samples.forEach((sample) => {
+    if (!Number.isFinite(sample.lat) || !Number.isFinite(sample.lng)) {
+      throw new Error("Data GPS tidak valid.");
+    }
+
+    if (sample.mocked) {
+      throw new Error("Terdeteksi fake GPS. Matikan mock location lalu coba lagi.");
+    }
+
+    if (!Number.isFinite(sample.accuracy) || sample.accuracy > GPS_MAX_ACCURACY_METER) {
+      throw new Error(
+        `Akurasi GPS belum stabil (${Math.round(sample.accuracy || 0)} meter). Tunggu sebentar atau coba di area terbuka.`
+      );
+    }
+
+    if (!sample.timestamp || now - sample.timestamp > GPS_MAX_AGE_MS) {
+      throw new Error("Data GPS terlalu lama. Aktifkan GPS lalu coba lagi.");
+    }
+  });
+
+  for (let i = 1; i < samples.length; i++) {
+    const prev = samples[i - 1];
+    const current = samples[i];
+    const jarak = hitungJarakMeter(
+      prev.lat,
+      prev.lng,
+      current.lat,
+      current.lng
+    );
+    const durasiDetik = Math.max((current.timestamp - prev.timestamp) / 1000, 1);
+    const speed = jarak / durasiDetik;
+
+    if (jarak > GPS_MAX_SAMPLE_DISTANCE_METER || speed > GPS_MAX_SPEED_METER_PER_SECOND) {
+      throw new Error("GPS belum stabil. Tunggu beberapa detik, pastikan lokasi aktif, lalu coba lagi.");
+    }
+  }
+
+  const bestSample = samples.reduce((best, sample) => {
+    return sample.accuracy < best.accuracy ? sample : best;
+  }, samples[0]);
+
+  return {
+    ...bestSample,
+    sampleCount: samples.length,
+    fakeGpsCheck: "lolos"
+  };
 }
 
 function hitungJarakMeter(lat1, lon1, lat2, lon2) {
@@ -534,7 +635,10 @@ async function prosesAbsen(tipe, fotoBase64 = "") {
       lokasi: {
         lat: lokasi.lat,
         lng: lokasi.lng,
-        jarakMeter: Math.round(jarak)
+        jarakMeter: Math.round(jarak),
+        accuracyMeter: Math.round(lokasi.accuracy),
+        sampleCount: lokasi.sampleCount,
+        fakeGpsCheck: lokasi.fakeGpsCheck
       },
       dibuatOleh: auth.currentUser.uid
     });
