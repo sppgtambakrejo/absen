@@ -359,17 +359,22 @@ const NAMA_HARI = [
 ];
 const DIVISI_LIST = [
   "Asisten Lapangan",
-  "ADM. Gudang",
   "Persiapan",
+  "Head Chef",
   "Pengolahan",
   "Pemorsian",
   "Distribusi",
   "Pencucian",
   "Kebersihan",
-  "Security",
-  "Content Creator",
+  "Keamanan",
   "Sanitarian"
 ];
+
+const DIVISI_ALIASES = {
+  "adm. gudang": "Persiapan",
+  "content creator": "Persiapan",
+  "security": "Keamanan"
+};
 
 let semuaRelawan = [];
 let semuaGajiDivisi = {};
@@ -388,9 +393,10 @@ async function loadSettingPayroll() {
   snapshotDivisi.forEach((doc) => {
 
     const data = doc.data();
+    const divisi = normalizeDivisi(data.divisi);
 
-    semuaGajiDivisi[data.divisi] =
-    data.nominal || 0;
+    semuaGajiDivisi[divisi] =
+    data.nominal || semuaGajiDivisi[divisi] || 0;
 
   });
 
@@ -407,7 +413,7 @@ async function loadSettingPayroll() {
     semuaGajiKhusus[relawanId] = {
       relawanId,
       nama: data.nama || "",
-      divisi: data.divisi || "",
+      divisi: normalizeDivisi(data.divisi),
       label: data.label || "Gaji Khusus",
       nominal: Number(data.nominal || 0)
     };
@@ -437,9 +443,11 @@ async function loadRelawanPayroll() {
   semuaRelawan = [];
 
   snapshot.forEach((dokumen) => {
+    const data = dokumen.data();
     semuaRelawan.push({
       id: dokumen.id,
-      ...dokumen.data()
+      ...data,
+      divisi: normalizeDivisi(data.divisi)
     });
   });
 
@@ -815,6 +823,11 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
+function normalizeDivisi(value) {
+  const text = String(value || "").trim();
+  return DIVISI_ALIASES[text.toLowerCase()] || text;
+}
+
 async function getAbsensiRange(start, end) {
   const startDate = new Date(`${start}T00:00:00`);
   const endDate = new Date(`${end}T00:00:00`);
@@ -829,6 +842,7 @@ async function getAbsensiRange(start, end) {
     hasilById.set(dokumen.id, {
       id: dokumen.id,
       ...data,
+      divisi: normalizeDivisi(data.divisi),
       tanggalJadwal,
       tanggalRealtime,
       tanggalPayroll: tanggalJadwal
