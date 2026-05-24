@@ -345,10 +345,21 @@ function closeSignatureModal() {
   clearSignaturePad();
 }
 
-if (btnOpenSigner2Pad) btnOpenSigner2Pad.addEventListener('click', () => openSignatureModalFor('signer2', templateSigner2.value || 'Akuntan'));
-if (btnOpenSigner3Pad) btnOpenSigner3Pad.addEventListener('click', () => openSignatureModalFor('signer3', templateSigner3.value || 'Kepala SPPG'));
+// support click and touch for mobile
+if (btnOpenSigner2Pad) {
+  btnOpenSigner2Pad.addEventListener('click', () => openSignatureModalFor('signer2', templateSigner2.value || 'Akuntan'));
+  btnOpenSigner2Pad.addEventListener('touchend', (e) => { e.preventDefault(); openSignatureModalFor('signer2', templateSigner2.value || 'Akuntan'); });
+}
+if (btnOpenSigner3Pad) {
+  btnOpenSigner3Pad.addEventListener('click', () => openSignatureModalFor('signer3', templateSigner3.value || 'Kepala SPPG'));
+  btnOpenSigner3Pad.addEventListener('touchend', (e) => { e.preventDefault(); openSignatureModalFor('signer3', templateSigner3.value || 'Kepala SPPG'); });
+}
 if (btnCloseSignatureModal) btnCloseSignatureModal.addEventListener('click', closeSignatureModal);
 if (btnCloseSignatureModal2) btnCloseSignatureModal2.addEventListener('click', closeSignatureModal);
+
+// backdrop click to close (mobile friendly)
+const signatureBackdrop = document.querySelector('#signatureModal .modal-backdrop');
+if (signatureBackdrop) signatureBackdrop.addEventListener('click', closeSignatureModal);
 
 const gajiBackdrop = document.querySelector('#gajiDivisiModal .modal-backdrop');
 if (gajiBackdrop) gajiBackdrop.addEventListener('click', closeGajiModal);
@@ -397,15 +408,32 @@ loadSlipTemplate();
 let sigCtx = null;
 let drawing = false;
 let lastX = 0, lastY = 0;
+let signaturePadInitialized = false;
 function initSignaturePad() {
   if (!signatureCanvas) return;
+
+  // set canvas size for high-DPI screens
+  const ratio = window.devicePixelRatio || 1;
+  const rect = signatureCanvas.getBoundingClientRect();
+  signatureCanvas.width = Math.max(1, Math.round(rect.width * ratio));
+  signatureCanvas.height = Math.max(1, Math.round(rect.height * ratio));
+  signatureCanvas.style.width = rect.width + 'px';
+  signatureCanvas.style.height = rect.height + 'px';
+
   sigCtx = signatureCanvas.getContext('2d');
+  sigCtx.scale(ratio, ratio);
   sigCtx.clearRect(0,0,signatureCanvas.width, signatureCanvas.height);
   sigCtx.lineWidth = 2.0;
   sigCtx.lineCap = 'round';
   sigCtx.strokeStyle = '#111';
 
-  const rect = signatureCanvas.getBoundingClientRect();
+  function getPointer(e) {
+    const r = signatureCanvas.getBoundingClientRect();
+    if (e.touches && e.touches[0]) {
+      return { x: e.touches[0].clientX - r.left, y: e.touches[0].clientY - r.top };
+    }
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  }
 
   function pointerDown(e) {
     e.preventDefault();
@@ -431,26 +459,31 @@ function initSignaturePad() {
     drawing = false;
   }
 
-  function getPointer(e) {
-    const rect = signatureCanvas.getBoundingClientRect();
-    if (e.touches && e.touches[0]) {
-      return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
-    }
-    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  if (!signaturePadInitialized) {
+    signatureCanvas.addEventListener('mousedown', pointerDown);
+    signatureCanvas.addEventListener('mousemove', pointerMove);
+    signatureCanvas.addEventListener('mouseup', pointerUp);
+    signatureCanvas.addEventListener('mouseout', pointerUp);
+    signatureCanvas.addEventListener('touchstart', pointerDown, {passive:false});
+    signatureCanvas.addEventListener('touchmove', pointerMove, {passive:false});
+    signatureCanvas.addEventListener('touchend', pointerUp);
+    signaturePadInitialized = true;
   }
-
-  signatureCanvas.addEventListener('mousedown', pointerDown);
-  signatureCanvas.addEventListener('mousemove', pointerMove);
-  signatureCanvas.addEventListener('mouseup', pointerUp);
-  signatureCanvas.addEventListener('mouseout', pointerUp);
-  signatureCanvas.addEventListener('touchstart', pointerDown, {passive:false});
-  signatureCanvas.addEventListener('touchmove', pointerMove, {passive:false});
-  signatureCanvas.addEventListener('touchend', pointerUp);
 }
 
 function clearSignaturePad() {
-  if (!signatureCanvas || !sigCtx) return;
-  sigCtx.clearRect(0,0,signatureCanvas.width, signatureCanvas.height);
+  if (!signatureCanvas) return;
+  const ctx = sigCtx || signatureCanvas.getContext('2d');
+  try {
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
+    ctx.restore();
+  } catch (e) {
+    // fallback
+    signatureCanvas.width = signatureCanvas.width;
+  }
+  drawing = false;
 }
 
 if (btnClearPad) btnClearPad.addEventListener('click', () => {
