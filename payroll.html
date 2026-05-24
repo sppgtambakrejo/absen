@@ -6,7 +6,7 @@
 
   <title>Payroll Relawan</title>
 
-  <link rel="stylesheet" href="payroll.css" />
+  <link rel="stylesheet" href="payroll.css?v=20260524-slip-final-v22" />
 </head>
 <body>
 
@@ -18,29 +18,170 @@
         <p>Kelola slip gaji dan rekap payroll relawan</p>
       </div>
 
-      <a href="admin.html" class="back-btn">← Kembali Dashboard</a>
+      <a href="admin.html" class="back-btn">&larr; Kembali Dashboard</a>
     </header>
 <section class="setting-grid">
 
-  <div class="setting-card">
+  <div class="setting-card summary-card">
     <h2>Setting Gaji Divisi</h2>
     <p>Atur standar gaji harian berdasarkan divisi.</p>
 
-    <div id="gajiDivisiList" class="setting-list">
+    <div style="margin-top:12px">
+      <button id="btnOpenGajiDivisi" class="primary">Atur Gaji Divisi</button>
+    </div>
+  </div>
+
+  <div class="setting-card summary-card">
+    <h2>Setting Gaji Khusus</h2>
+    <p>Atur nominal dan nama gaji khusus untuk relawan tertentu.</p>
+
+    <div style="margin-top:12px">
+      <button id="btnOpenGajiKhusus" class="primary">Atur Gaji Khusus</button>
+    </div>
+  </div>
+
+  <div class="setting-card summary-card">
+    <h2>Template Slip Gaji</h2>
+    <p>Atur kop slip, tanda tangan digital, dan label cetak.</p>
+
+    <div style="margin-top:12px">
+      <button id="btnOpenSlipTemplate" class="primary">Atur Template Slip</button>
+    </div>
+  </div>
+</section>
+
+<!-- Modal: Gaji Divisi -->
+<div id="gajiDivisiModal" class="modal" hidden>
+  <div class="modal-backdrop" data-close="true"></div>
+  <div class="modal-dialog">
+    <header class="modal-header">
+      <h2>Setting Gaji Divisi</h2>
+      <button id="btnCloseGajiDivisi" class="modal-close" aria-label="Tutup">&times;</button>
+    </header>
+
+    <div id="gajiDivisiList" class="setting-list modal-body">
       Memuat setting gaji divisi...
     </div>
-  </div>
 
-  <div class="setting-card">
-    <h2>Setting Gaji Relawan</h2>
-    <p>Atur apakah relawan ikut gaji divisi atau punya gaji khusus.</p>
-
-    <div id="gajiRelawanList" class="setting-list">
-      Memuat setting gaji relawan...
+    <div class="modal-actions">
+      <button id="btnCloseGajiDivisi2" class="secondary">Tutup</button>
     </div>
   </div>
+</div>
 
-</section>
+<!-- Modal: Gaji Khusus -->
+<div id="gajiKhususModal" class="modal" hidden>
+  <div class="modal-backdrop" data-close="true"></div>
+  <div class="modal-dialog">
+    <header class="modal-header">
+      <h2>Setting Gaji Khusus</h2>
+      <button id="btnCloseGajiKhusus" class="modal-close" aria-label="Tutup">&times;</button>
+    </header>
+
+    <div class="modal-body">
+      <div class="gaji-khusus-form">
+        <div class="form-group">
+          <label>Divisi</label>
+          <select id="gajiKhususDivisi"></select>
+        </div>
+        <div class="form-group">
+          <label>Nama Relawan</label>
+          <select id="gajiKhususRelawan"></select>
+        </div>
+        <div class="form-group">
+          <label>Nama Gaji Khusus</label>
+          <input type="text" id="gajiKhususLabel" placeholder="Contoh: Gaji Koordinator">
+        </div>
+        <div class="form-group">
+          <label>Nominal</label>
+          <input type="number" min="0" id="gajiKhususNominal" placeholder="Nominal">
+        </div>
+        <button type="button" id="btnSaveGajiKhusus">Simpan</button>
+      </div>
+
+      <div id="gajiKhususList" class="setting-list gaji-khusus-list">
+        Memuat setting gaji khusus...
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button id="btnCloseGajiKhusus2" class="secondary">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Template Slip Gaji -->
+<div id="slipTemplateModal" class="modal" hidden>
+  <div class="modal-backdrop" data-close="true"></div>
+  <div class="modal-dialog template-modal-dialog">
+    <header class="modal-header">
+      <div>
+        <h2>Template Slip Gaji</h2>
+        <p>Atur kop tanda terima, label periode, catatan terbilang, dan kolom tanda tangan.</p>
+      </div>
+      <button id="btnCloseSlipTemplate" class="modal-close" aria-label="Tutup">&times;</button>
+    </header>
+
+    <div class="modal-body template-modal-body">
+      <div class="template-grid">
+        <div class="template-group">
+          <label>Judul Kanan</label>
+          <input type="text" id="templateTitle" placeholder="TANDA TERIMA UPAH RELAWAN">
+        </div>
+        <div class="template-group">
+          <label>Nama Instansi Baris 1</label>
+          <input type="text" id="templateSubtitle" placeholder="SATUAN PELAYANAN PEMENUHAN GIZI">
+        </div>
+        <div class="template-group">
+          <label>Nama Instansi Baris 2</label>
+          <input type="text" id="templateSubtitle2" placeholder="LIMADUA BHAKTI BANGSA">
+        </div>
+        <div class="template-group">
+          <label>Label Periode</label>
+          <input type="text" id="templatePeriodLabel" placeholder="Periode">
+        </div>
+        <div class="template-group">
+          <label>Catatan Terbilang</label>
+          <input type="text" id="templateFooterNote" placeholder="Kosongkan untuk terbilang otomatis">
+        </div>
+        <div class="template-group">
+          <label>Kolom Tanda Tangan 1</label>
+          <input type="text" id="templateSigner1" placeholder="Penerima">
+        </div>
+        <div class="template-group">
+          <label>Kolom Tanda Tangan 2</label>
+          <input type="text" id="templateSigner2" placeholder="Akuntan">
+        </div>
+        <div class="template-group signature-upload">
+          <label>Upload Tanda Tangan Akuntan</label>
+          <input type="file" id="templateSigner2Signature" accept="image/png,image/jpeg,image/webp">
+          <div class="signature-preview" id="templateSigner2SignaturePreview">
+            Belum ada tanda tangan
+          </div>
+          <button type="button" id="btnClearSigner2Signature" class="secondary">Hapus Tanda Tangan</button>
+        </div>
+        <div class="template-group">
+          <label>Kolom Tanda Tangan 3</label>
+          <input type="text" id="templateSigner3" placeholder="Kepala SPPG">
+        </div>
+        <div class="template-group signature-upload">
+          <label>Upload Tanda Tangan Kepala SPPG</label>
+          <input type="file" id="templateSigner3Signature" accept="image/png,image/jpeg,image/webp">
+          <div class="signature-preview" id="templateSigner3SignaturePreview">
+            Belum ada tanda tangan
+          </div>
+          <button type="button" id="btnClearSigner3Signature" class="secondary">Hapus Tanda Tangan</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-actions template-actions">
+      <button id="btnSaveSlipTemplate">Simpan Template</button>
+      <button id="btnResetSlipTemplate" type="button">Reset Default</button>
+      <button id="btnCloseSlipTemplate2" type="button" class="secondary">Tutup</button>
+    </div>
+  </div>
+</div>
     <section class="filter-card">
       <div class="filter-group">
         <label>Periode Awal</label>
@@ -55,6 +196,42 @@
 
       <button id="btnLoadPayroll">Load Payroll</button>
     </section>
+
+    <section class="detail-card modal-card" id="detailPayrollCard" hidden>
+      <div class="modal-content">
+        <header class="modal-card-header">
+          <h2>Edit Honor Per Hari</h2>
+          <button id="btnCloseDetailPayroll" class="modal-close" aria-label="Tutup">&times;</button>
+        </header>
+
+        <div class="detail-info">
+          <strong id="detailNama"></strong>
+          <span id="detailPeriode"></span>
+        </div>
+        <div class="detail-form-grid">
+          <div class="detail-group">
+            <label>Pilih Tanggal / Hari</label>
+            <select id="detailDaySelect"></select>
+          </div>
+          <div class="detail-group">
+            <label>Honor</label>
+            <input type="number" min="0" id="detailHonorInput" />
+          </div>
+        </div>
+        <div class="detail-selected-info">
+          <span id="detailSelectedDate">Tanggal: -</span>
+          <span id="detailSelectedHari">Hari: -</span>
+        </div>
+        <div class="edit-total-row">
+          <span>Total Honor</span>
+          <strong id="detailTotalHonor">Rp0</strong>
+        </div>
+        <div class="edit-actions">
+          <button id="btnSaveDayHonor">Simpan Honor</button>
+          <button id="btnCancelDayHonor" type="button">Batal</button>
+        </div>
+      </div>
+    </section>
 <section class="total-payroll-card">
 
   <div>
@@ -66,6 +243,7 @@
   </div>
 
 </section>
+
     <section class="table-card">
       <div class="table-header">
         <h2>Data Payroll</h2>
@@ -73,6 +251,7 @@
         <div class="action-buttons">
           <button id="btnPrintSelected">Print Terpilih</button>
           <button id="btnPrintAll">Print Semua</button>
+          <button id="btnExportExcel">Export Excel</button>
           <button id="btnSimpanPayroll">
   Simpan Payroll
 </button>
@@ -89,7 +268,7 @@
               <th>Nama</th>
               <th>Divisi</th>
               <th>Jumlah Hadir</th>
-              <th>Mode Gaji</th>
+              <th>Keterangan Gaji</th>
               <th>Tarif</th>
               <th>Total Gaji</th>
               <th>Aksi</th>
@@ -109,6 +288,13 @@
 
   <section id="printArea" class="print-area"></section>
 
-  <script type="module" src="payroll.js"></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.getRegistrations()
+        .then((registrations) => registrations.forEach((registration) => registration.unregister()))
+        .catch(() => {});
+    }
+  </script>
+  <script type="module" src="payroll.js?v=20260524-slip-final-v22"></script>
 </body>
 </html>
