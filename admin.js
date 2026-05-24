@@ -92,7 +92,7 @@ const btnAmbilLokasi = document.getElementById("btnAmbilLokasi");
 const btnSimpanLokasi = document.getElementById("btnSimpanLokasi");
 
 const menuButtons = document.querySelectorAll(
-  ".menu-item, .mobile-nav button"
+  ".menu-item, .mobile-nav button, .mobile-nav .mobile-link"
 );
 
 const DIVISI_LIST = [
