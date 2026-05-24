@@ -586,6 +586,10 @@ SETTING GAJI
   z-index: 1200;
 }
 
+#signatureModal {
+  z-index: 1300;
+}
+
 /* Ensure hidden attribute actually hides modal even if .modal sets display */
 .modal[hidden] {
   display: none !important;
@@ -632,6 +636,15 @@ SETTING GAJI
   max-height: 60vh;
   overflow: auto;
   padding-bottom: 8px;
+}
+
+#signatureCanvas {
+  display: block;
+  width: 100%;
+  max-width: 600px;
+  height: 200px;
+  margin: 0 auto;
+  touch-action: none;
 }
 
 .modal-actions {
@@ -1011,6 +1024,18 @@ MOBILE
   .template-modal-body {
     max-height: calc(100vh - 190px);
     overflow: auto;
+  }
+
+  #signatureModal .modal-dialog {
+    max-height: calc(100vh - 20px);
+  }
+
+  #signatureModal .modal-body {
+    max-height: calc(100vh - 165px);
+  }
+
+  #signatureCanvas {
+    height: 170px;
   }
 
   .modal-actions {
