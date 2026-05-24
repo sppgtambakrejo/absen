@@ -898,7 +898,8 @@ function buatPayroll(dataAbsensi) {
     hadirTerhitung.add(hadirKey);
 
     const gajiKhusus = semuaGajiKhusus[id];
-    const gajiDivisi = Number(semuaGajiDivisi[item.divisi] || 0);
+    const divisi = normalizeDivisi(item.divisi) || "-";
+    const gajiDivisi = Number(semuaGajiDivisi[divisi] || 0);
     const tarif = gajiKhusus?.nominal > 0
       ? Number(gajiKhusus.nominal)
       : gajiDivisi;
@@ -910,7 +911,7 @@ function buatPayroll(dataAbsensi) {
       rekap[id] = {
         relawanId: id,
         nama: item.nama || "-",
-        divisi: item.divisi || "-",
+        divisi,
         jumlahHadir: 0,
         tarif,
         totalGaji: 0,
@@ -939,7 +940,7 @@ function buatPayroll(dataAbsensi) {
   });
 
   const getDivisiOrder = (divisi) => {
-    const index = DIVISI_LIST.indexOf(divisi);
+    const index = DIVISI_LIST.indexOf(normalizeDivisi(divisi));
     return index === -1 ? DIVISI_LIST.length : index;
   };
 
