@@ -153,24 +153,28 @@
           <input type="text" id="templateSigner2" placeholder="Akuntan">
         </div>
         <div class="template-group signature-upload">
-          <label>Upload Tanda Tangan Akuntan</label>
-          <input type="file" id="templateSigner2Signature" accept="image/png,image/jpeg,image/webp">
+          <label>Tanda Tangan Akuntan</label>
+          <div>
+            <button type="button" id="btnOpenSigner2Pad" class="primary">Buka Tanda Tangan</button>
+            <button type="button" id="btnClearSigner2Signature" class="secondary">Hapus Tanda Tangan</button>
+          </div>
           <div class="signature-preview" id="templateSigner2SignaturePreview">
             Belum ada tanda tangan
           </div>
-          <button type="button" id="btnClearSigner2Signature" class="secondary">Hapus Tanda Tangan</button>
         </div>
         <div class="template-group">
           <label>Kolom Tanda Tangan 3</label>
           <input type="text" id="templateSigner3" placeholder="Kepala SPPG">
         </div>
         <div class="template-group signature-upload">
-          <label>Upload Tanda Tangan Kepala SPPG</label>
-          <input type="file" id="templateSigner3Signature" accept="image/png,image/jpeg,image/webp">
+          <label>Tanda Tangan Kepala SPPG</label>
+          <div>
+            <button type="button" id="btnOpenSigner3Pad" class="primary">Buka Tanda Tangan</button>
+            <button type="button" id="btnClearSigner3Signature" class="secondary">Hapus Tanda Tangan</button>
+          </div>
           <div class="signature-preview" id="templateSigner3SignaturePreview">
             Belum ada tanda tangan
           </div>
-          <button type="button" id="btnClearSigner3Signature" class="secondary">Hapus Tanda Tangan</button>
         </div>
       </div>
     </div>
@@ -182,6 +186,31 @@
     </div>
   </div>
 </div>
+
+<!-- Modal: Signature Pad -->
+<div id="signatureModal" class="modal" hidden>
+  <div class="modal-backdrop" data-close="true"></div>
+  <div class="modal-dialog">
+    <header class="modal-header">
+      <h2>Tanda Tangan Digital</h2>
+      <button id="btnCloseSignatureModal" class="modal-close" aria-label="Tutup">&times;</button>
+    </header>
+    <div class="modal-body">
+      <p id="signatureModalLabel">Tanda tangan</p>
+      <div style="text-align:center;">
+        <canvas id="signatureCanvas" width="600" height="200" style="border:1px solid #ddd; touch-action: none;"></canvas>
+      </div>
+      <div style="margin-top:8px; display:flex; gap:8px; justify-content:center;">
+        <button id="btnClearPad" type="button" class="secondary">Bersihkan</button>
+        <button id="btnSavePad" type="button" class="primary">Simpan Tanda Tangan</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button id="btnCloseSignatureModal2" type="button" class="secondary">Tutup</button>
+    </div>
+  </div>
+</div>
+
     <section class="filter-card">
       <div class="filter-group">
         <label>Periode Awal</label>
