@@ -21,6 +21,23 @@ import {
 console.log("Payroll aktif");
 console.log("Payroll print template version: slip-final-v22");
 
+// CONFIG: Jika ingin upload ke Google Apps Script, isi GAS_ENDPOINT dan set USE_GAS=true
+const USE_GAS = true; // ubah ke true untuk mengaktifkan upload
+const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbyZkPNcii7t_PnVcovRpiGsoIpLfVfhZTRk3wmgde_yBpGeFJWblI75sHVq3VP0Ewq2yg/exec"; // Web App URL
+const GAS_SECRET = "secretrahasiasppgadmin"; // optional shared secret untuk validasi sederhana
+
+async function uploadSignatureToGAS(dataUrl, filename, signer) {
+  if (!GAS_ENDPOINT) throw new Error('GAS endpoint belum dikonfigurasi');
+  const payload = { dataUrl, filename, signer, token: GAS_SECRET };
+  const res = await fetch(GAS_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) throw new Error('Upload gagal: ' + res.status);
+  return res.json();
+}
+
 const payrollBody = document.getElementById("payrollBody");
 const btnLoadPayroll = document.getElementById("btnLoadPayroll");
 const tanggalAwalInput = document.getElementById("tanggalAwal");
@@ -53,14 +70,21 @@ const templateFooterNote = document.getElementById("templateFooterNote");
 const templateSigner1 = document.getElementById("templateSigner1");
 const templateSigner2 = document.getElementById("templateSigner2");
 const templateSigner3 = document.getElementById("templateSigner3");
-const templateSigner2Signature = document.getElementById("templateSigner2Signature");
-const templateSigner3Signature = document.getElementById("templateSigner3Signature");
 const templateSigner2SignaturePreview = document.getElementById("templateSigner2SignaturePreview");
 const templateSigner3SignaturePreview = document.getElementById("templateSigner3SignaturePreview");
 const btnClearSigner2Signature = document.getElementById("btnClearSigner2Signature");
 const btnClearSigner3Signature = document.getElementById("btnClearSigner3Signature");
 const btnSaveSlipTemplate = document.getElementById("btnSaveSlipTemplate");
 const btnResetSlipTemplate = document.getElementById("btnResetSlipTemplate");
+const btnOpenSigner2Pad = document.getElementById("btnOpenSigner2Pad");
+const btnOpenSigner3Pad = document.getElementById("btnOpenSigner3Pad");
+const signatureModal = document.getElementById("signatureModal");
+const signatureCanvas = document.getElementById("signatureCanvas");
+const btnClearPad = document.getElementById("btnClearPad");
+const btnSavePad = document.getElementById("btnSavePad");
+const btnCloseSignatureModal = document.getElementById("btnCloseSignatureModal");
+const btnCloseSignatureModal2 = document.getElementById("btnCloseSignatureModal2");
+const signatureModalLabel = document.getElementById("signatureModalLabel");
 const gajiKhususList = document.getElementById("gajiKhususList");
 const gajiKhususDivisi = document.getElementById("gajiKhususDivisi");
 const gajiKhususRelawan = document.getElementById("gajiKhususRelawan");
@@ -305,6 +329,27 @@ if (btnOpenSlipTemplate) btnOpenSlipTemplate.addEventListener("click", openSlipT
 if (btnCloseSlipTemplate) btnCloseSlipTemplate.addEventListener("click", closeSlipTemplateModal);
 if (btnCloseSlipTemplate2) btnCloseSlipTemplate2.addEventListener("click", closeSlipTemplateModal);
 
+// Signature pad modal openers
+let currentSigningKey = null; // 'signer2' or 'signer3'
+function openSignatureModalFor(key, label) {
+  currentSigningKey = key;
+  if (!signatureModal) return;
+  if (signatureModalLabel) signatureModalLabel.textContent = label || "Tanda tangan";
+  signatureModal.hidden = false;
+  initSignaturePad();
+}
+
+function closeSignatureModal() {
+  if (!signatureModal) return;
+  signatureModal.hidden = true;
+  clearSignaturePad();
+}
+
+if (btnOpenSigner2Pad) btnOpenSigner2Pad.addEventListener('click', () => openSignatureModalFor('signer2', templateSigner2.value || 'Akuntan'));
+if (btnOpenSigner3Pad) btnOpenSigner3Pad.addEventListener('click', () => openSignatureModalFor('signer3', templateSigner3.value || 'Kepala SPPG'));
+if (btnCloseSignatureModal) btnCloseSignatureModal.addEventListener('click', closeSignatureModal);
+if (btnCloseSignatureModal2) btnCloseSignatureModal2.addEventListener('click', closeSignatureModal);
+
 const gajiBackdrop = document.querySelector('#gajiDivisiModal .modal-backdrop');
 if (gajiBackdrop) gajiBackdrop.addEventListener('click', closeGajiModal);
 const gajiKhususBackdrop = document.querySelector('#gajiKhususModal .modal-backdrop');
@@ -347,6 +392,107 @@ if (btnClearSigner3Signature) {
   });
 }
 loadSlipTemplate();
+
+// Signature pad implementation (simple)
+let sigCtx = null;
+let drawing = false;
+let lastX = 0, lastY = 0;
+function initSignaturePad() {
+  if (!signatureCanvas) return;
+  sigCtx = signatureCanvas.getContext('2d');
+  sigCtx.clearRect(0,0,signatureCanvas.width, signatureCanvas.height);
+  sigCtx.lineWidth = 2.0;
+  sigCtx.lineCap = 'round';
+  sigCtx.strokeStyle = '#111';
+
+  const rect = signatureCanvas.getBoundingClientRect();
+
+  function pointerDown(e) {
+    e.preventDefault();
+    drawing = true;
+    const p = getPointer(e);
+    lastX = p.x; lastY = p.y;
+  }
+
+  function pointerMove(e) {
+    if (!drawing) return;
+    e.preventDefault();
+    const p = getPointer(e);
+    sigCtx.beginPath();
+    sigCtx.moveTo(lastX, lastY);
+    sigCtx.lineTo(p.x, p.y);
+    sigCtx.stroke();
+    lastX = p.x; lastY = p.y;
+  }
+
+  function pointerUp(e) {
+    if (!drawing) return;
+    e.preventDefault();
+    drawing = false;
+  }
+
+  function getPointer(e) {
+    const rect = signatureCanvas.getBoundingClientRect();
+    if (e.touches && e.touches[0]) {
+      return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
+    }
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  }
+
+  signatureCanvas.addEventListener('mousedown', pointerDown);
+  signatureCanvas.addEventListener('mousemove', pointerMove);
+  signatureCanvas.addEventListener('mouseup', pointerUp);
+  signatureCanvas.addEventListener('mouseout', pointerUp);
+  signatureCanvas.addEventListener('touchstart', pointerDown, {passive:false});
+  signatureCanvas.addEventListener('touchmove', pointerMove, {passive:false});
+  signatureCanvas.addEventListener('touchend', pointerUp);
+}
+
+function clearSignaturePad() {
+  if (!signatureCanvas || !sigCtx) return;
+  sigCtx.clearRect(0,0,signatureCanvas.width, signatureCanvas.height);
+}
+
+if (btnClearPad) btnClearPad.addEventListener('click', () => {
+  clearSignaturePad();
+});
+
+if (btnSavePad) btnSavePad.addEventListener('click', async () => {
+  if (!signatureCanvas || !currentSigningKey) return;
+  const dataUrl = signatureCanvas.toDataURL('image/png');
+  // resize and save to slipTemplate (local or remote)
+  try {
+    const resized = await resizeSignatureImage(dataUrl);
+    const key = currentSigningKey + 'Signature';
+
+    if (USE_GAS && GAS_ENDPOINT) {
+      try {
+        const filename = `sig_${currentSigningKey}_${Date.now()}.png`;
+        const result = await uploadSignatureToGAS(resized, filename, currentSigningKey);
+        if (result && result.success && result.meta && result.meta.url) {
+          slipTemplate[key] = result.meta.url; // store remote URL
+        } else {
+          slipTemplate[key] = resized; // fallback to local data
+        }
+      } catch (upErr) {
+        console.error('Upload ke GAS gagal, menyimpan lokal:', upErr);
+        slipTemplate[key] = resized;
+        alert('Upload tanda tangan gagal, tersimpan secara lokal.');
+      }
+    } else {
+      slipTemplate[key] = resized;
+    }
+
+    // persist immediately
+    localStorage.setItem('slipTemplatePayroll', JSON.stringify(slipTemplate));
+    renderSignaturePreview(currentSigningKey === 'signer2' ? templateSigner2SignaturePreview : templateSigner3SignaturePreview, slipTemplate[key]);
+    alert('Tanda tangan tersimpan.');
+    closeSignatureModal();
+  } catch (err) {
+    console.error('Gagal menyimpan tanda tangan:', err);
+    alert('Gagal menyimpan tanda tangan.');
+  }
+});
 
 const NAMA_HARI = [
   "Minggu",
