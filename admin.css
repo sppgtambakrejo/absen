@@ -700,10 +700,11 @@ MOBILE
 
     grid-template-columns:
     repeat(5,1fr);
+    gap:2px;
 
     background:#111827;
 
-    padding:10px;
+    padding:8px;
 
     border-radius:24px;
 
@@ -713,42 +714,55 @@ MOBILE
 
   }
 
-.mobile-nav button{
+  .mobile-nav button,
+  .mobile-nav .mobile-link{
 
     border:none;
 
     background:transparent;
 
     color:#9ca3af;
+    text-decoration:none;
 
     display:flex;
     flex-direction:column;
     align-items:center;
+    justify-content:center;
 
     gap:5px;
+    min-width:0;
+    width:100%;
+    min-height:54px;
+    margin:0;
+    padding:6px 2px;
+    box-sizing:border-box;
 
     font-size:11px;
     font-weight:700;
+    line-height:1.15;
 
     cursor:pointer;
 
   }
 
-  .mobile-nav .mobile-link{
-    color:#9ca3af;
-  }
-
-  .mobile-nav button i{
-
-    font-size:18px;
-
-  }
-
+  .mobile-nav button i,
   .mobile-nav .mobile-link i{
+
     font-size:18px;
+
   }
 
-  .mobile-nav button.active{
+  .mobile-nav button span,
+  .mobile-nav .mobile-link span{
+    display:block;
+    max-width:100%;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  .mobile-nav button.active,
+  .mobile-nav .mobile-link.active{
 
     color:white;
 
