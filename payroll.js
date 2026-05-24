@@ -19,7 +19,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 console.log("Payroll aktif");
-console.log("Payroll print template version: slip-final-v22");
+console.log("Payroll print template version: mobile-signature-v24");
 
 // CONFIG: Jika ingin upload ke Google Apps Script, isi GAS_ENDPOINT dan set USE_GAS=true
 const USE_GAS = true; // ubah ke true untuk mengaktifkan upload
@@ -72,6 +72,8 @@ const templateSigner2 = document.getElementById("templateSigner2");
 const templateSigner3 = document.getElementById("templateSigner3");
 const templateSigner2SignaturePreview = document.getElementById("templateSigner2SignaturePreview");
 const templateSigner3SignaturePreview = document.getElementById("templateSigner3SignaturePreview");
+const templateSigner2Signature = document.getElementById("templateSigner2Signature");
+const templateSigner3Signature = document.getElementById("templateSigner3Signature");
 const btnClearSigner2Signature = document.getElementById("btnClearSigner2Signature");
 const btnClearSigner3Signature = document.getElementById("btnClearSigner3Signature");
 const btnSaveSlipTemplate = document.getElementById("btnSaveSlipTemplate");
@@ -336,7 +338,7 @@ function openSignatureModalFor(key, label) {
   if (!signatureModal) return;
   if (signatureModalLabel) signatureModalLabel.textContent = label || "Tanda tangan";
   signatureModal.hidden = false;
-  initSignaturePad();
+  requestAnimationFrame(initSignaturePad);
 }
 
 function closeSignatureModal() {
@@ -459,14 +461,15 @@ function initSignaturePad() {
     drawing = false;
   }
 
-  if (!signaturePadInitialized) {
+if (!signaturePadInitialized) {
     signatureCanvas.addEventListener('mousedown', pointerDown);
     signatureCanvas.addEventListener('mousemove', pointerMove);
     signatureCanvas.addEventListener('mouseup', pointerUp);
     signatureCanvas.addEventListener('mouseout', pointerUp);
     signatureCanvas.addEventListener('touchstart', pointerDown, {passive:false});
     signatureCanvas.addEventListener('touchmove', pointerMove, {passive:false});
-    signatureCanvas.addEventListener('touchend', pointerUp);
+    signatureCanvas.addEventListener('touchend', pointerUp, {passive:false});
+    signatureCanvas.addEventListener('touchcancel', pointerUp, {passive:false});
     signaturePadInitialized = true;
   }
 }
