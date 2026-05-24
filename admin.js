@@ -11,6 +11,7 @@ import {
   setDoc,
   doc,
   updateDoc,
+  writeBatch,
   deleteDoc,
   Timestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -42,6 +43,7 @@ const listDataRelawan = document.getElementById("listDataRelawan");
 const searchDataRelawan = document.getElementById("searchDataRelawan");
 
 const btnAbsenManual = document.getElementById("btnAbsenManual");
+const btnCekDatabaseAbsensi = document.getElementById("btnCekDatabaseAbsensi");
 const manualModal = document.getElementById("manualModal");
 const closeManualModal = document.getElementById("closeManualModal");
 const manualDivisi = document.getElementById("manualDivisi");
@@ -59,6 +61,27 @@ const closeExportModal = document.getElementById("closeExportModal");
 const exportStartDate = document.getElementById("exportStartDate");
 const exportEndDate = document.getElementById("exportEndDate");
 const btnDownloadExcel = document.getElementById("btnDownloadExcel");
+
+const databaseAbsensiPanel = document.getElementById("databaseAbsensiPanel");
+const dbTanggalAwal = document.getElementById("dbTanggalAwal");
+const dbTanggalAkhir = document.getElementById("dbTanggalAkhir");
+const dbFilterDivisi = document.getElementById("dbFilterDivisi");
+const dbFilterRelawan = document.getElementById("dbFilterRelawan");
+const btnCariDatabaseAbsensi = document.getElementById("btnCariDatabaseAbsensi");
+const dbAbsensiSummary = document.getElementById("dbAbsensiSummary");
+const dbAbsensiList = document.getElementById("dbAbsensiList");
+
+const editAbsensiModal = document.getElementById("editAbsensiModal");
+const closeEditAbsensiModal = document.getElementById("closeEditAbsensiModal");
+const editAbsensiId = document.getElementById("editAbsensiId");
+const editAbsensiRelawan = document.getElementById("editAbsensiRelawan");
+const editAbsensiTipe = document.getElementById("editAbsensiTipe");
+const editAbsensiTanggalJadwal = document.getElementById("editAbsensiTanggalJadwal");
+const editAbsensiRealtimeGroup = document.getElementById("editAbsensiRealtimeGroup");
+const editAbsensiTanggal = document.getElementById("editAbsensiTanggal");
+const editAbsensiJam = document.getElementById("editAbsensiJam");
+const editAbsensiKeterangan = document.getElementById("editAbsensiKeterangan");
+const btnUpdateAbsensi = document.getElementById("btnUpdateAbsensi");
 
 const settingPanel = document.getElementById("settingPanel");
 const settingNamaLokasi = document.getElementById("settingNamaLokasi");
@@ -98,6 +121,7 @@ const NAMA_HARI = [
 
 let semuaAbsensi = [];
 let semuaRelawan = [];
+let dataDatabaseAbsensi = [];
 
 onAuthStateChanged(auth, (user) => {
   if (!user) {
@@ -128,10 +152,43 @@ function tanggalKeHari(tanggalValue) {
   return `${namaHari}, ${dd}/${mm}/${yyyy}`;
 }
 
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function getTimestampDate(timestamp) {
+  if (!timestamp) return null;
+  if (typeof timestamp.toDate === "function") return timestamp.toDate();
+  if (timestamp instanceof Date) return timestamp;
+  return null;
+}
+
+function formatJamInput(timestamp) {
+  const tanggal = getTimestampDate(timestamp);
+  if (!tanggal) return "";
+
+  const hh = String(tanggal.getHours()).padStart(2, "0");
+  const mm = String(tanggal.getMinutes()).padStart(2, "0");
+  return `${hh}:${mm}`;
+}
+
+function formatTanggalIndonesia(tanggalValue) {
+  if (!tanggalValue) return "-";
+  return tanggalKeHari(tanggalValue);
+}
+
 function formatJam(timestamp) {
   if (!timestamp) return "-";
 
-  return timestamp.toDate().toLocaleTimeString("id-ID", {
+  const tanggal = getTimestampDate(timestamp);
+  if (!tanggal) return "-";
+
+  return tanggal.toLocaleTimeString("id-ID", {
     hour: "2-digit",
     minute: "2-digit"
   });
@@ -140,7 +197,10 @@ function formatJam(timestamp) {
 function formatTanggal(timestamp) {
   if (!timestamp) return "-";
 
-  return timestamp.toDate().toLocaleDateString("id-ID", {
+  const tanggal = getTimestampDate(timestamp);
+  if (!tanggal) return "-";
+
+  return tanggal.toLocaleDateString("id-ID", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric"
@@ -150,7 +210,11 @@ function formatTanggal(timestamp) {
 function hitungDurasi(masuk, pulang) {
   if (!masuk || !pulang) return "-";
 
-  const ms = pulang.toDate() - masuk.toDate();
+  const masukDate = getTimestampDate(masuk);
+  const pulangDate = getTimestampDate(pulang);
+  if (!masukDate || !pulangDate) return "-";
+
+  const ms = pulangDate - masukDate;
   const jam = Math.floor(ms / 3600000);
   const menit = Math.floor((ms % 3600000) / 60000);
 
@@ -209,6 +273,56 @@ function isiManualDivisi() {
       </option>
     `;
   });
+}
+
+function isiDatabaseDivisi() {
+  dbFilterDivisi.innerHTML = `
+    <option value="semua">Semua Divisi</option>
+  `;
+
+  DIVISI_LIST.forEach((divisi) => {
+    dbFilterDivisi.innerHTML += `
+      <option value="${escapeHtml(divisi)}">
+        ${escapeHtml(divisi)}
+      </option>
+    `;
+  });
+}
+
+function isiDatabaseRelawan() {
+  const divisi = dbFilterDivisi.value;
+  const relawanTerfilter = semuaRelawan
+    .filter((item) => divisi === "semua" || item.divisi === divisi)
+    .sort((a, b) => (a.nama || "").localeCompare(b.nama || ""));
+
+  dbFilterRelawan.innerHTML = `
+    <option value="semua">Semua Nama</option>
+  `;
+
+  relawanTerfilter.forEach((item) => {
+    dbFilterRelawan.innerHTML += `
+      <option value="${escapeHtml(item.id)}">
+        ${escapeHtml(item.nama || "-")}
+      </option>
+    `;
+  });
+}
+
+function isiEditAbsensiRelawan() {
+  editAbsensiRelawan.innerHTML = `
+    <option value="">Pilih Relawan</option>
+  `;
+
+  semuaRelawan
+    .slice()
+    .sort((a, b) => (a.nama || "").localeCompare(b.nama || ""))
+    .forEach((item) => {
+      editAbsensiRelawan.innerHTML += `
+        <option value="${escapeHtml(item.id)}">
+          ${escapeHtml(item.nama || "-")} - ${escapeHtml(item.divisi || "-")}
+        </option>
+      `;
+    });
 }
 
 function initFilterHari() {
@@ -285,6 +399,44 @@ async function loadSettingLokasi() {
     console.error(error);
     alert("Gagal memuat setting lokasi.");
   }
+}
+
+async function sinkronkanAbsensiRelawan(relawanId, dataRelawan) {
+  const q = query(
+    collection(db, "absensi"),
+    where("relawanId", "==", relawanId)
+  );
+  const snapshot = await getDocs(q);
+
+  if (snapshot.empty) {
+    return 0;
+  }
+
+  let batch = writeBatch(db);
+  let jumlahBatch = 0;
+  let totalUpdate = 0;
+
+  for (const dokumen of snapshot.docs) {
+    batch.update(dokumen.ref, {
+      nama: dataRelawan.nama,
+      divisi: dataRelawan.divisi
+    });
+
+    jumlahBatch += 1;
+    totalUpdate += 1;
+
+    if (jumlahBatch === 450) {
+      await batch.commit();
+      batch = writeBatch(db);
+      jumlahBatch = 0;
+    }
+  }
+
+  if (jumlahBatch > 0) {
+    await batch.commit();
+  }
+
+  return totalUpdate;
 }
 
 function buatRekapExport(dataHari) {
@@ -689,6 +841,270 @@ function renderDataRelawan() {
   });
 }
 
+function getAbsensiKey(item) {
+  return [
+    item.relawanId || item.nama || "tanpa-relawan",
+    item.tanggal || "tanpa-tanggal",
+    item.tipe || "tanpa-tipe"
+  ].join("|");
+}
+
+function getUrutanDoubleAbsensi(data, item) {
+  const key = getAbsensiKey(item);
+  const grup = data
+    .filter((row) => getAbsensiKey(row) === key)
+    .sort((a, b) => {
+      const waktuA = getTimestampDate(a.waktu)?.getTime() || 0;
+      const waktuB = getTimestampDate(b.waktu)?.getTime() || 0;
+      return waktuA - waktuB;
+    });
+
+  if (grup.length <= 1) {
+    return null;
+  }
+
+  return {
+    total: grup.length,
+    urutan: grup.findIndex((row) => row.id === item.id) + 1
+  };
+}
+
+function getLokasiAbsensi(item) {
+  if (item.manual) return "Manual admin";
+  if (!item.lokasi) return "-";
+
+  const jarak = item.lokasi.jarakMeter ?? "-";
+  const lat = item.lokasi.lat ?? "-";
+  const lng = item.lokasi.lng ?? "-";
+  const accuracy = item.lokasi.accuracyMeter;
+  const fakeGpsCheck = item.lokasi.fakeGpsCheck;
+  const detailGps = [];
+
+  if (accuracy !== undefined) {
+    detailGps.push(`akurasi ${accuracy}m`);
+  }
+
+  if (fakeGpsCheck) {
+    detailGps.push(`anti fake GPS: ${fakeGpsCheck}`);
+  }
+
+  return `${jarak} meter | ${lat}, ${lng}${
+    detailGps.length ? ` | ${detailGps.join(" | ")}` : ""
+  }`;
+}
+
+async function loadDatabaseAbsensi() {
+  const start = dbTanggalAwal.value;
+  const end = dbTanggalAkhir.value;
+
+  if (!start || !end) {
+    alert("Pilih tanggal awal dan tanggal akhir.");
+    return;
+  }
+
+  if (start > end) {
+    alert("Tanggal awal tidak boleh lebih besar dari tanggal akhir.");
+    return;
+  }
+
+  btnCariDatabaseAbsensi.disabled = true;
+  btnCariDatabaseAbsensi.innerHTML = `
+    <i class="fa-solid fa-spinner fa-spin"></i>
+    Memuat...
+  `;
+
+  try {
+    const q = query(
+      collection(db, "absensi"),
+      where("tanggal", ">=", start),
+      where("tanggal", "<=", end)
+    );
+
+    const snapshot = await getDocs(q);
+
+    dataDatabaseAbsensi = [];
+
+    snapshot.forEach((dokumen) => {
+      dataDatabaseAbsensi.push({
+        id: dokumen.id,
+        ...dokumen.data()
+      });
+    });
+
+    renderDatabaseAbsensi();
+  } catch (error) {
+    console.error(error);
+    alert("Gagal memuat database absensi.");
+  } finally {
+    btnCariDatabaseAbsensi.disabled = false;
+    btnCariDatabaseAbsensi.innerHTML = `
+      <i class="fa-solid fa-magnifying-glass"></i>
+      Cari Data
+    `;
+  }
+}
+
+function renderDatabaseAbsensi() {
+  const divisi = dbFilterDivisi.value;
+  const relawanId = dbFilterRelawan.value;
+
+  let data = dataDatabaseAbsensi.slice();
+
+  if (divisi !== "semua") {
+    data = data.filter((item) => item.divisi === divisi);
+  }
+
+  if (relawanId !== "semua") {
+    data = data.filter((item) => item.relawanId === relawanId);
+  }
+
+  data.sort((a, b) => {
+    const tanggalCompare = (a.tanggal || "").localeCompare(b.tanggal || "");
+    if (tanggalCompare !== 0) return tanggalCompare;
+
+    const divisiCompare = (a.divisi || "").localeCompare(b.divisi || "");
+    if (divisiCompare !== 0) return divisiCompare;
+
+    const namaCompare = (a.nama || "").localeCompare(b.nama || "");
+    if (namaCompare !== 0) return namaCompare;
+
+    const waktuA = getTimestampDate(a.waktu)?.getTime() || 0;
+    const waktuB = getTimestampDate(b.waktu)?.getTime() || 0;
+    return waktuA - waktuB;
+  });
+
+  const doubleCount = data.filter((item) =>
+    Boolean(getUrutanDoubleAbsensi(data, item))
+  ).length;
+
+  dbAbsensiSummary.innerText =
+    `${data.length} dokumen ditemukan. ${doubleCount} dokumen terindikasi double absen.`;
+
+  if (data.length === 0) {
+    dbAbsensiList.innerHTML = `
+      <div class="empty-state">
+        Tidak ada data sesuai filter.
+      </div>
+    `;
+    return;
+  }
+
+  dbAbsensiList.innerHTML = data.map((item) => {
+    const doubleInfo = getUrutanDoubleAbsensi(data, item);
+    const tipeClass = item.tipe === "pulang"
+      ? "badge-pulang"
+      : item.tipe === "tidak_hadir"
+        ? "badge-tidak-hadir"
+        : "badge-working";
+
+    return `
+      <div class="database-absensi-card" data-id="${escapeHtml(item.id)}">
+        <div class="database-absensi-main">
+          <div>
+            <div class="database-absensi-title">
+              ${escapeHtml(item.nama || "-")}
+              ${
+                doubleInfo
+                  ? `<span class="double-badge">Double ${escapeHtml(item.tipe || "-")} ${doubleInfo.urutan}/${doubleInfo.total}</span>`
+                  : ""
+              }
+            </div>
+            <div class="database-absensi-subtitle">
+              ${escapeHtml(item.divisi || "-")} | ID dokumen: ${escapeHtml(item.id)}
+            </div>
+          </div>
+
+          <div class="database-actions">
+            <button class="btn-save" data-action="edit-absensi" data-id="${escapeHtml(item.id)}">
+              Edit
+            </button>
+            <button class="btn-delete" data-action="hapus-absensi" data-id="${escapeHtml(item.id)}">
+              Hapus
+            </button>
+          </div>
+        </div>
+
+        <div class="database-detail-grid">
+          <div>
+            <span>Tipe</span>
+            <strong class="badge ${tipeClass}">${escapeHtml(item.tipe || "-")}</strong>
+          </div>
+          <div>
+            <span>Jadwal</span>
+            <strong>${escapeHtml(item.hari || formatTanggalIndonesia(item.tanggal))}</strong>
+          </div>
+          <div>
+            <span>Tanggal Real</span>
+            <strong>${escapeHtml(item.tanggal || "-")}</strong>
+          </div>
+          <div>
+            <span>Jam</span>
+            <strong>${escapeHtml(formatJam(item.waktu))}</strong>
+          </div>
+          <div>
+            <span>Sumber</span>
+            <strong>${item.manual ? "Manual" : "Absensi aplikasi"}</strong>
+          </div>
+          <div>
+            <span>Lokasi</span>
+            <strong>${escapeHtml(getLokasiAbsensi(item))}</strong>
+          </div>
+          <div>
+            <span>Keterangan</span>
+            <strong>${escapeHtml(item.keterangan || "-")}</strong>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function bukaEditAbsensi(id) {
+  const item = dataDatabaseAbsensi.find((row) => row.id === id);
+
+  if (!item) {
+    alert("Data absensi tidak ditemukan.");
+    return;
+  }
+
+  isiEditAbsensiRelawan();
+
+  editAbsensiId.value = item.id;
+  editAbsensiRelawan.value = item.relawanId || "";
+  editAbsensiTipe.value = item.tipe || "masuk";
+  editAbsensiTanggalJadwal.value = item.tanggal || tanggalHariIni();
+  editAbsensiTanggal.value = item.tanggal || tanggalHariIni();
+  editAbsensiJam.value = formatJamInput(item.waktu);
+  editAbsensiKeterangan.value = item.keterangan || "";
+  editAbsensiRealtimeGroup.style.display =
+    editAbsensiTipe.value === "tidak_hadir" ? "none" : "block";
+
+  editAbsensiModal.classList.add("show");
+}
+
+async function hapusAbsensi(id) {
+  const item = dataDatabaseAbsensi.find((row) => row.id === id);
+  const nama = item?.nama || "data ini";
+  const konfirmasi = confirm(`Yakin ingin menghapus absensi ${nama}?`);
+
+  if (!konfirmasi) return;
+
+  try {
+    await deleteDoc(doc(db, "absensi", id));
+    dataDatabaseAbsensi = dataDatabaseAbsensi.filter((row) => row.id !== id);
+    renderDatabaseAbsensi();
+
+    if (filterHari.value) {
+      loadAbsensiDariTanggal(filterHari.value);
+    }
+
+    alert("Data absensi berhasil dihapus.");
+  } catch (error) {
+    console.error(error);
+    alert("Gagal menghapus data absensi.");
+  }
+}
+
 menuButtons.forEach((btn) => {
   btn.addEventListener("click", () => {
     menuButtons.forEach((item) =>
@@ -699,7 +1115,7 @@ menuButtons.forEach((btn) => {
 
     const text = btn.innerText.trim();
     
-    if (text === "Export") {
+if (text === "Export") {
 
   exportStartDate.value =
   filterHari.value || tanggalHariIni();
@@ -725,6 +1141,9 @@ menuButtons.forEach((btn) => {
   settingPanel.classList.remove("panel-show");
   settingPanel.classList.add("panel-hidden");
 
+  databaseAbsensiPanel.classList.remove("panel-show");
+  databaseAbsensiPanel.classList.add("panel-hidden");
+
   loadDataRelawan();
 
 } else if (text === "Setting") {
@@ -735,6 +1154,9 @@ menuButtons.forEach((btn) => {
 
   relawanPanel.classList.remove("panel-show");
   relawanPanel.classList.add("panel-hidden");
+
+  databaseAbsensiPanel.classList.remove("panel-show");
+  databaseAbsensiPanel.classList.add("panel-hidden");
 
   settingPanel.classList.remove("panel-hidden");
   settingPanel.classList.add("panel-show");
@@ -750,11 +1172,152 @@ menuButtons.forEach((btn) => {
   relawanPanel.classList.remove("panel-show");
   relawanPanel.classList.add("panel-hidden");
 
+  databaseAbsensiPanel.classList.remove("panel-show");
+  databaseAbsensiPanel.classList.add("panel-hidden");
+
   settingPanel.classList.remove("panel-show");
   settingPanel.classList.add("panel-hidden");
 
 }
   });
+});
+
+btnCekDatabaseAbsensi.addEventListener("click", async () => {
+  document.querySelector(".stats-grid").style.display = "none";
+  monitoringList.style.display = "none";
+
+  relawanPanel.classList.remove("panel-show");
+  relawanPanel.classList.add("panel-hidden");
+
+  settingPanel.classList.remove("panel-show");
+  settingPanel.classList.add("panel-hidden");
+
+  databaseAbsensiPanel.classList.remove("panel-hidden");
+  databaseAbsensiPanel.classList.add("panel-show");
+
+  dbTanggalAwal.value = dbTanggalAwal.value || filterHari.value || tanggalHariIni();
+  dbTanggalAkhir.value = dbTanggalAkhir.value || filterHari.value || tanggalHariIni();
+
+  await loadDataRelawan();
+  isiDatabaseRelawan();
+  await loadDatabaseAbsensi();
+});
+
+dbFilterDivisi.addEventListener("change", () => {
+  isiDatabaseRelawan();
+  renderDatabaseAbsensi();
+});
+
+dbFilterRelawan.addEventListener("change", renderDatabaseAbsensi);
+btnCariDatabaseAbsensi.addEventListener("click", loadDatabaseAbsensi);
+
+dbAbsensiList.addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-action]");
+  if (!button) return;
+
+  const { action, id } = button.dataset;
+
+  if (action === "edit-absensi") {
+    bukaEditAbsensi(id);
+    return;
+  }
+
+  if (action === "hapus-absensi") {
+    hapusAbsensi(id);
+  }
+});
+
+closeEditAbsensiModal.addEventListener("click", () => {
+  editAbsensiModal.classList.remove("show");
+});
+
+editAbsensiModal.addEventListener("click", (e) => {
+  if (e.target === editAbsensiModal) {
+    editAbsensiModal.classList.remove("show");
+  }
+});
+
+editAbsensiTipe.addEventListener("change", () => {
+  editAbsensiRealtimeGroup.style.display =
+    editAbsensiTipe.value === "tidak_hadir" ? "none" : "block";
+});
+
+btnUpdateAbsensi.addEventListener("click", async () => {
+  const id = editAbsensiId.value;
+  const relawanId = editAbsensiRelawan.value;
+  const tipe = editAbsensiTipe.value;
+  const tanggalJadwal = editAbsensiTanggalJadwal.value;
+  const tanggal = editAbsensiTanggal.value;
+  const jam = editAbsensiJam.value;
+  const keterangan = editAbsensiKeterangan.value.trim();
+
+  if (!id || !relawanId || !tipe || !tanggalJadwal) {
+    alert("Lengkapi data absensi.");
+    return;
+  }
+
+  if (tipe !== "tidak_hadir" && (!tanggal || !jam)) {
+    alert("Lengkapi tanggal dan jam real absen.");
+    return;
+  }
+
+  const relawan = semuaRelawan.find((item) => item.id === relawanId);
+
+  if (!relawan) {
+    alert("Data relawan tidak ditemukan.");
+    return;
+  }
+
+  const tanggalReal = tipe === "tidak_hadir"
+    ? tanggalJadwal
+    : tanggal;
+
+  const waktu = tipe === "tidak_hadir"
+    ? new Date(`${tanggalJadwal}T00:00`)
+    : new Date(`${tanggal}T${jam}`);
+
+  try {
+    await updateDoc(doc(db, "absensi", id), {
+      relawanId,
+      nama: relawan.nama,
+      divisi: relawan.divisi,
+      tipe,
+      hari: tanggalKeHari(tanggalJadwal),
+      tanggal: tanggalReal,
+      waktu: Timestamp.fromDate(waktu),
+      keterangan,
+      updatedAt: Timestamp.now(),
+      updatedBy: auth.currentUser.uid
+    });
+
+    const index = dataDatabaseAbsensi.findIndex((item) => item.id === id);
+
+    if (index !== -1) {
+      dataDatabaseAbsensi[index] = {
+        ...dataDatabaseAbsensi[index],
+        relawanId,
+        nama: relawan.nama,
+        divisi: relawan.divisi,
+        tipe,
+        hari: tanggalKeHari(tanggalJadwal),
+        tanggal: tanggalReal,
+        waktu: Timestamp.fromDate(waktu),
+        keterangan
+      };
+    }
+
+    renderDatabaseAbsensi();
+    editAbsensiModal.classList.remove("show");
+
+    if (filterHari.value) {
+      loadAbsensiDariTanggal(filterHari.value);
+    }
+
+    alert("Data absensi berhasil diperbarui.");
+  } catch (error) {
+    console.error(error);
+    alert("Gagal memperbarui data absensi.");
+  }
 });
 
 manualDivisi.addEventListener("change", () => {
@@ -960,9 +1523,16 @@ window.updateRelawan = async function(id) {
       status
     });
 
+    const totalAbsensiDisinkronkan = await sinkronkanAbsensiRelawan(id, {
+      nama,
+      divisi
+    });
+
     await loadDataRelawan();
 
-    alert("Data relawan berhasil diperbarui ✅");
+    alert(
+      `Data relawan berhasil diperbarui ✅\n${totalAbsensiDisinkronkan} dokumen absensi ikut diperbarui.`
+    );
   } catch (error) {
     console.error(error);
     alert("Gagal menyimpan data relawan.");
@@ -1596,6 +2166,7 @@ btnSimpanLokasi.addEventListener("click", async () => {
 isiFilterDivisi();
 isiDivisiRelawan();
 isiManualDivisi();
+isiDatabaseDivisi();
 initFilterHari();
 
 loadAbsensiDariTanggal(filterHari.value);
