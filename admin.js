@@ -114,6 +114,8 @@ const DIVISI_ALIASES = {
   "security": "Keamanan"
 };
 
+let migrasiDivisiPromise = null;
+
 const NAMA_HARI = [
   "Minggu",
   "Senin",
@@ -169,6 +171,159 @@ function escapeHtml(value) {
 function normalizeDivisi(value) {
   const text = String(value || "").trim();
   return DIVISI_ALIASES[text.toLowerCase()] || text;
+}
+
+function perluMigrasiDivisi(value) {
+  const text = String(value || "").trim();
+  return text && normalizeDivisi(text) !== text;
+}
+
+function getDivisiOrder(divisi) {
+  const index = DIVISI_LIST.indexOf(normalizeDivisi(divisi));
+  return index === -1 ? DIVISI_LIST.length : index;
+}
+
+function compareDivisi(a, b) {
+  const orderA = getDivisiOrder(a);
+  const orderB = getDivisiOrder(b);
+  if (orderA !== orderB) return orderA - orderB;
+  return String(a || "").localeCompare(String(b || ""));
+}
+
+async function commitBatchIfNeeded(batch, count) {
+  if (count > 0) {
+    await batch.commit();
+  }
+}
+
+async function migrasiFieldDivisiKoleksi(namaKoleksi) {
+  const snapshot = await getDocs(collection(db, namaKoleksi));
+  let batch = writeBatch(db);
+  let count = 0;
+  let total = 0;
+
+  for (const dokumen of snapshot.docs) {
+    const data = dokumen.data();
+    if (!perluMigrasiDivisi(data.divisi)) continue;
+
+    batch.update(dokumen.ref, {
+      divisi: normalizeDivisi(data.divisi)
+    });
+
+    count += 1;
+    total += 1;
+
+    if (count === 450) {
+      await batch.commit();
+      batch = writeBatch(db);
+      count = 0;
+    }
+  }
+
+  await commitBatchIfNeeded(batch, count);
+  return total;
+}
+
+async function migrasiGajiDivisi() {
+  const snapshot = await getDocs(collection(db, "gajiDivisi"));
+  const nominalBaru = {};
+  const dokumenLama = [];
+
+  snapshot.forEach((dokumen) => {
+    const data = dokumen.data();
+    const divisiAsli = data.divisi || dokumen.id;
+    const divisiBaru = normalizeDivisi(divisiAsli);
+    const nominal = Number(data.nominal || 0);
+
+    if (!perluMigrasiDivisi(divisiAsli)) {
+      nominalBaru[divisiBaru] = nominalBaru[divisiBaru] || nominal;
+      return;
+    }
+
+    nominalBaru[divisiBaru] = nominalBaru[divisiBaru] || nominal;
+    dokumenLama.push(dokumen);
+  });
+
+  if (dokumenLama.length === 0) return 0;
+
+  let batch = writeBatch(db);
+  let count = 0;
+
+  Object.entries(nominalBaru).forEach(([divisi, nominal]) => {
+    if (!nominal) return;
+    batch.set(doc(db, "gajiDivisi", divisi), {
+      divisi,
+      nominal
+    }, { merge: true });
+    count += 1;
+  });
+
+  dokumenLama.forEach((dokumen) => {
+    if (normalizeDivisi(dokumen.id) === dokumen.id) return;
+    batch.delete(dokumen.ref);
+    count += 1;
+  });
+
+  await commitBatchIfNeeded(batch, count);
+  return dokumenLama.length;
+}
+
+async function migrasiPayrollPeriode() {
+  const snapshot = await getDocs(collection(db, "payrollPeriode"));
+  let batch = writeBatch(db);
+  let count = 0;
+  let total = 0;
+
+  for (const dokumen of snapshot.docs) {
+    const data = dokumen.data();
+    if (!Array.isArray(data.data)) continue;
+
+    let berubah = false;
+    const dataPayroll = data.data.map((item) => {
+      if (!perluMigrasiDivisi(item?.divisi)) return item;
+      berubah = true;
+      return {
+        ...item,
+        divisi: normalizeDivisi(item.divisi)
+      };
+    });
+
+    if (!berubah) continue;
+
+    batch.update(dokumen.ref, {
+      data: dataPayroll
+    });
+
+    count += 1;
+    total += 1;
+
+    if (count === 450) {
+      await batch.commit();
+      batch = writeBatch(db);
+      count = 0;
+    }
+  }
+
+  await commitBatchIfNeeded(batch, count);
+  return total;
+}
+
+async function migrasiDivisiLama() {
+  if (migrasiDivisiPromise) return migrasiDivisiPromise;
+
+  migrasiDivisiPromise = (async () => {
+    try {
+      await migrasiFieldDivisiKoleksi("relawan");
+      await migrasiFieldDivisiKoleksi("absensi");
+      await migrasiFieldDivisiKoleksi("gajiKhusus");
+      await migrasiGajiDivisi();
+      await migrasiPayrollPeriode();
+    } catch (error) {
+      console.warn("Migrasi divisi lama gagal atau tidak lengkap:", error);
+    }
+  })();
+
+  return migrasiDivisiPromise;
 }
 
 function getTimestampDate(timestamp) {
@@ -462,7 +617,7 @@ function buatRekapExport(dataHari) {
     if (!rekap[data.relawanId]) {
       rekap[data.relawanId] = {
         nama: data.nama || "-",
-        divisi: data.divisi || "-",
+        divisi: normalizeDivisi(data.divisi) || "-",
         masuk: null,
         pulang: null,
         status: "Hadir",
@@ -508,7 +663,7 @@ function buatRekap() {
     if (!rekap[data.relawanId]) {
       rekap[data.relawanId] = {
         nama: data.nama || "-",
-        divisi: data.divisi || "-",
+        divisi: normalizeDivisi(data.divisi) || "-",
         masuk: null,
         pulang: null,
         foto: "",
@@ -651,7 +806,7 @@ function renderDashboard() {
   }
 
   Object.keys(grouped)
-    .sort()
+    .sort(compareDivisi)
     .forEach((divisi) => {
       const relawanList = grouped[divisi]
         .sort((a, b) =>
@@ -978,7 +1133,7 @@ function renderDatabaseAbsensi() {
     const tanggalCompare = (a.tanggal || "").localeCompare(b.tanggal || "");
     if (tanggalCompare !== 0) return tanggalCompare;
 
-    const divisiCompare = (a.divisi || "").localeCompare(b.divisi || "");
+    const divisiCompare = compareDivisi(a.divisi, b.divisi);
     if (divisiCompare !== 0) return divisiCompare;
 
     const namaCompare = (a.nama || "").localeCompare(b.nama || "");
@@ -1666,16 +1821,8 @@ Object.keys(groupedByHari).forEach((hari) => {
   const dataRekap =
 buatRekapExport(dataHari);
 dataRekap.sort((a, b) => {
-
-  const urutanA =
-  DIVISI_LIST.indexOf(a.divisi);
-
-  const urutanB =
-  DIVISI_LIST.indexOf(b.divisi);
-
-  if (urutanA !== urutanB) {
-    return urutanA - urutanB;
-  }
+  const urutanDivisi = compareDivisi(a.divisi, b.divisi);
+  if (urutanDivisi !== 0) return urutanDivisi;
 
   return a.nama.localeCompare(b.nama);
 
@@ -2187,4 +2334,6 @@ isiManualDivisi();
 isiDatabaseDivisi();
 initFilterHari();
 
-loadAbsensiDariTanggal(filterHari.value);
+migrasiDivisiLama().finally(() => {
+  loadAbsensiDariTanggal(filterHari.value);
+});
