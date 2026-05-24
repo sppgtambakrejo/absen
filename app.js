@@ -45,17 +45,22 @@ const GPS_TIMEOUT_MS = 25000;
 
 const DIVISI_LIST = [
   "Asisten Lapangan",
-  "ADM. Gudang",
   "Persiapan",
+  "Head Chef",
   "Pengolahan",
   "Pemorsian",
   "Distribusi",
   "Pencucian",
   "Kebersihan",
-  "Security",
-  "Content Creator",
+  "Keamanan",
   "Sanitarian"
 ];
+
+const DIVISI_ALIASES = {
+  "adm. gudang": "Persiapan",
+  "content creator": "Persiapan",
+  "security": "Keamanan"
+};
 
 const NAMA_HARI = [
   "Senin",
@@ -69,6 +74,11 @@ const NAMA_HARI = [
 let dataRelawan = [];
 let userSiap = false;
 let streamKamera = null;
+
+function normalizeDivisi(value) {
+  const text = String(value || "").trim();
+  return DIVISI_ALIASES[text.toLowerCase()] || text;
+}
 
 function isiDivisi() {
   divisiSelect.innerHTML = `<option value="">Pilih Divisi</option>`;
@@ -153,9 +163,11 @@ async function loadRelawan() {
   dataRelawan = [];
 
   snapshot.forEach((dokumen) => {
+    const data = dokumen.data();
     dataRelawan.push({
       id: dokumen.id,
-      ...dokumen.data()
+      ...data,
+      divisi: normalizeDivisi(data.divisi)
     });
   });
 
