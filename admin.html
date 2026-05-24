@@ -436,6 +436,77 @@ MOBILE NAV
 
 </nav>
 
+<div id="editRelawanModal" class="manual-modal">
+
+  <div class="manual-box">
+
+    <div class="manual-header">
+      <h2>Edit Relawan</h2>
+
+      <button id="closeEditRelawanModal">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <input type="hidden" id="editRelawanId">
+
+    <label class="manual-label">Nama Relawan</label>
+    <input type="text" id="editRelawanNama" placeholder="Nama Relawan">
+
+    <label class="manual-label">Divisi</label>
+    <select id="editRelawanDivisi">
+      <option value="">Pilih Divisi</option>
+    </select>
+
+    <label class="manual-label">PIN</label>
+    <input type="text" id="editRelawanPin" placeholder="PIN Relawan">
+
+    <label class="manual-label">Status</label>
+    <select id="editRelawanStatus">
+      <option value="aktif">Aktif</option>
+      <option value="nonaktif">Nonaktif</option>
+    </select>
+
+    <button id="btnUpdateRelawan" class="btn-save-manual">
+      Simpan Perubahan
+    </button>
+
+  </div>
+
+</div>
+
+<div id="hapusRelawanModal" class="manual-modal">
+
+  <div class="manual-box confirm-box">
+
+    <div class="manual-header">
+      <h2>Hapus Relawan</h2>
+
+      <button id="closeHapusRelawanModal">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <input type="hidden" id="hapusRelawanId">
+
+    <p id="hapusRelawanText" class="confirm-text">
+      Yakin ingin menghapus relawan ini?
+    </p>
+
+    <div class="confirm-actions">
+      <button id="btnBatalHapusRelawan" class="btn-cancel">
+        Batal
+      </button>
+
+      <button id="btnConfirmHapusRelawan" class="btn-delete">
+        Hapus
+      </button>
+    </div>
+
+  </div>
+
+</div>
+
 <div id="manualModal" class="manual-modal">
 
   <div class="manual-box">
