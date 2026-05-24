@@ -41,6 +41,20 @@ const pinRelawan = document.getElementById("pinRelawan");
 const btnTambahRelawan = document.getElementById("btnTambahRelawan");
 const listDataRelawan = document.getElementById("listDataRelawan");
 const searchDataRelawan = document.getElementById("searchDataRelawan");
+const editRelawanModal = document.getElementById("editRelawanModal");
+const closeEditRelawanModal = document.getElementById("closeEditRelawanModal");
+const editRelawanId = document.getElementById("editRelawanId");
+const editRelawanNama = document.getElementById("editRelawanNama");
+const editRelawanDivisi = document.getElementById("editRelawanDivisi");
+const editRelawanPin = document.getElementById("editRelawanPin");
+const editRelawanStatus = document.getElementById("editRelawanStatus");
+const btnUpdateRelawan = document.getElementById("btnUpdateRelawan");
+const hapusRelawanModal = document.getElementById("hapusRelawanModal");
+const closeHapusRelawanModal = document.getElementById("closeHapusRelawanModal");
+const hapusRelawanId = document.getElementById("hapusRelawanId");
+const hapusRelawanText = document.getElementById("hapusRelawanText");
+const btnBatalHapusRelawan = document.getElementById("btnBatalHapusRelawan");
+const btnConfirmHapusRelawan = document.getElementById("btnConfirmHapusRelawan");
 
 const btnAbsenManual = document.getElementById("btnAbsenManual");
 const btnCekDatabaseAbsensi = document.getElementById("btnCekDatabaseAbsensi");
@@ -421,6 +435,20 @@ function isiDivisiRelawan() {
     divisiRelawan.innerHTML += `
       <option value="${divisi}">
         ${divisi}
+      </option>
+    `;
+  });
+}
+
+function isiEditRelawanDivisi() {
+  editRelawanDivisi.innerHTML = `
+    <option value="">Pilih Divisi</option>
+  `;
+
+  DIVISI_LIST.forEach((divisi) => {
+    editRelawanDivisi.innerHTML += `
+      <option value="${escapeHtml(divisi)}">
+        ${escapeHtml(divisi)}
       </option>
     `;
   });
@@ -910,18 +938,22 @@ function renderDataRelawan() {
   });
 
   data.forEach((item) => {
-    const divisi = item.divisi || "Tanpa Divisi";
+    const divisi = normalizeDivisi(item.divisi) || "Tanpa Divisi";
+    const itemNormal = {
+      ...item,
+      divisi
+    };
 
     if (!grouped[divisi]) {
       grouped[divisi] = [];
     }
 
-    grouped[divisi].push(item);
+    grouped[divisi].push(itemNormal);
   });
 
   listDataRelawan.innerHTML = "";
 
-  Object.keys(grouped).forEach((divisi) => {
+  Object.keys(grouped).sort(compareDivisi).forEach((divisi) => {
     const relawanDivisi = grouped[divisi];
 
     if (!relawanDivisi || relawanDivisi.length === 0) return;
@@ -932,62 +964,42 @@ function renderDataRelawan() {
       )
       .map((item) => {
         const statusValue = item.status || "aktif";
+        const statusLabel = statusValue === "aktif" ? "Aktif" : "Nonaktif";
 
         return `
-          <div class="data-relawan-card">
-            <input
-              type="text"
-              value="${item.nama || ""}"
-              id="nama-${item.id}"
-              placeholder="Nama"
-            >
+          <div class="data-relawan-card" data-id="${escapeHtml(item.id)}">
+            <div class="data-relawan-main">
+              <div class="data-relawan-avatar">
+                ${(item.nama || "?").charAt(0).toUpperCase()}
+              </div>
 
-            <select id="divisi-${item.id}">
-              ${DIVISI_LIST.map((div) => `
-                <option
-                  value="${div}"
-                  ${item.divisi === div ? "selected" : ""}
-                >
-                  ${div}
-                </option>
-              `).join("")}
-            </select>
+              <div class="data-relawan-info">
+                <h4>${escapeHtml(item.nama || "-")}</h4>
+                <p>${escapeHtml(item.divisi || "-")}</p>
+                <span class="relawan-pin">PIN: ${escapeHtml(item.pin || "-")}</span>
+              </div>
+            </div>
 
-            <input
-              type="text"
-              value="${item.pin || ""}"
-              id="pin-${item.id}"
-              placeholder="PIN"
-            >
+            <span class="status-pill ${statusValue === "aktif" ? "status-aktif" : "status-nonaktif"}">
+              ${statusLabel}
+            </span>
 
-            <select id="status-${item.id}">
-              <option
-                value="aktif"
-                ${statusValue === "aktif" ? "selected" : ""}
-              >
-                Aktif
-              </option>
-
-              <option
-                value="nonaktif"
-                ${statusValue === "nonaktif" ? "selected" : ""}
-              >
-                Nonaktif
-              </option>
-            </select>
-
-            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <div class="data-relawan-actions">
               <button
                 class="btn-save"
-                onclick="updateRelawan('${item.id}')"
+                data-action="edit-relawan"
+                data-id="${escapeHtml(item.id)}"
               >
-                Simpan
+                <i class="fa-solid fa-pen-to-square"></i>
+                Edit
               </button>
 
               <button
                 class="btn-delete"
-                onclick="hapusRelawan('${item.id}')"
+                data-action="hapus-relawan"
+                data-id="${escapeHtml(item.id)}"
               >
+                <i class="fa-solid fa-trash"></i>
                 Hapus
               </button>
             </div>
@@ -1670,7 +1682,10 @@ btnTambahRelawan.addEventListener("click", async () => {
   }
 });
 
-window.updateRelawan = async function(id) {
+async function updateRelawanInlineLama(id) {
+  openEditRelawan(id);
+  return;
+
   const namaEl = document.getElementById(`nama-${id}`);
   const divisiEl = document.getElementById(`divisi-${id}`);
   const pinEl = document.getElementById(`pin-${id}`);
@@ -1726,6 +1741,145 @@ window.hapusRelawan = async function(id) {
     alert("Gagal menghapus relawan.");
   }
 };
+
+function getRelawanById(id) {
+  return semuaRelawan.find((item) => item.id === id);
+}
+
+function openEditRelawan(id) {
+  const relawan = getRelawanById(id);
+  if (!relawan) {
+    alert("Data relawan tidak ditemukan.");
+    return;
+  }
+
+  editRelawanId.value = id;
+  editRelawanNama.value = relawan.nama || "";
+  editRelawanDivisi.value = normalizeDivisi(relawan.divisi) || "";
+  editRelawanPin.value = relawan.pin || "";
+  editRelawanStatus.value = relawan.status || "aktif";
+  editRelawanModal.classList.add("show");
+}
+
+function closeEditRelawan() {
+  editRelawanModal.classList.remove("show");
+}
+
+async function updateRelawanData(id, nama, divisi, pin, status) {
+  const divisiNormal = normalizeDivisi(divisi);
+
+  if (!id || !nama || !divisiNormal || !pin || !status) {
+    alert("Data relawan tidak boleh kosong.");
+    return;
+  }
+
+  try {
+    await updateDoc(doc(db, "relawan", id), {
+      nama,
+      divisi: divisiNormal,
+      pin,
+      status
+    });
+
+    const totalAbsensiDisinkronkan = await sinkronkanAbsensiRelawan(id, {
+      nama,
+      divisi: divisiNormal
+    });
+
+    await loadDataRelawan();
+    closeEditRelawan();
+
+    alert(
+      `Data relawan berhasil diperbarui âœ…\n${totalAbsensiDisinkronkan} dokumen absensi ikut diperbarui.`
+    );
+  } catch (error) {
+    console.error(error);
+    alert("Gagal menyimpan data relawan.");
+  }
+}
+
+function openHapusRelawan(id) {
+  const relawan = getRelawanById(id);
+  if (!relawan) {
+    alert("Data relawan tidak ditemukan.");
+    return;
+  }
+
+  hapusRelawanId.value = id;
+  hapusRelawanText.innerText = `Yakin ingin menghapus ${relawan.nama || "relawan ini"}?`;
+  hapusRelawanModal.classList.add("show");
+}
+
+function closeHapusRelawan() {
+  hapusRelawanModal.classList.remove("show");
+}
+
+async function hapusRelawanData(id) {
+  if (!id) return;
+
+  try {
+    await deleteDoc(doc(db, "relawan", id));
+
+    await loadDataRelawan();
+    closeHapusRelawan();
+
+    alert("Relawan berhasil dihapus âœ…");
+  } catch (error) {
+    console.error(error);
+    alert("Gagal menghapus relawan.");
+  }
+}
+
+listDataRelawan.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-action]");
+  if (!button) return;
+
+  const id = button.dataset.id;
+  if (!id) return;
+
+  if (button.dataset.action === "edit-relawan") {
+    openEditRelawan(id);
+    return;
+  }
+
+  if (button.dataset.action === "hapus-relawan") {
+    openHapusRelawan(id);
+  }
+});
+
+closeEditRelawanModal.addEventListener("click", closeEditRelawan);
+
+editRelawanModal.addEventListener("click", (event) => {
+  if (event.target === editRelawanModal) {
+    closeEditRelawan();
+  }
+});
+
+btnUpdateRelawan.addEventListener("click", async () => {
+  await updateRelawanData(
+    editRelawanId.value,
+    editRelawanNama.value.trim(),
+    editRelawanDivisi.value,
+    editRelawanPin.value.trim(),
+    editRelawanStatus.value
+  );
+});
+
+closeHapusRelawanModal.addEventListener("click", closeHapusRelawan);
+btnBatalHapusRelawan.addEventListener("click", closeHapusRelawan);
+
+hapusRelawanModal.addEventListener("click", (event) => {
+  if (event.target === hapusRelawanModal) {
+    closeHapusRelawan();
+  }
+});
+
+btnConfirmHapusRelawan.addEventListener("click", async () => {
+  await hapusRelawanData(hapusRelawanId.value);
+});
+
+window.updateRelawan = (id) => openEditRelawan(id);
+window.hapusRelawan = (id) => openHapusRelawan(id);
 
 searchRelawan.addEventListener("input", renderDashboard);
 searchDataRelawan.addEventListener("input", renderDataRelawan);
@@ -2330,6 +2484,7 @@ btnSimpanLokasi.addEventListener("click", async () => {
 });
 isiFilterDivisi();
 isiDivisiRelawan();
+isiEditRelawanDivisi();
 isiManualDivisi();
 isiDatabaseDivisi();
 initFilterHari();
