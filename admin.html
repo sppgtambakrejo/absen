@@ -147,7 +147,7 @@ CONTENT
   id="searchRelawan"
   placeholder="Cari relawan...">
 
-  <button
+<button
 id="btnAbsenManual"
 class="export-btn">
 
@@ -155,6 +155,15 @@ class="export-btn">
   Absen Manual
 
 </button>
+
+  <button
+  id="btnCekDatabaseAbsensi"
+  class="export-btn">
+
+    <i class="fa-solid fa-database"></i>
+    Cek Database Absensi
+
+  </button>
 
 </div>
 
@@ -259,6 +268,65 @@ class="monitoring-list">
   </div>
 
 </section>
+<section id="databaseAbsensiPanel" class="panel-hidden">
+
+  <div class="panel-card">
+
+    <h2>Cek Database Absensi</h2>
+    <p>Cek, edit, dan hapus data absensi Firestore tanpa membuka Firebase Console.</p>
+
+    <div class="database-filter-grid">
+
+      <div>
+        <label>Tanggal Awal</label>
+        <input type="date" id="dbTanggalAwal">
+      </div>
+
+      <div>
+        <label>Tanggal Akhir</label>
+        <input type="date" id="dbTanggalAkhir">
+      </div>
+
+      <div>
+        <label>Divisi</label>
+        <select id="dbFilterDivisi">
+          <option value="semua">Semua Divisi</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Nama</label>
+        <select id="dbFilterRelawan">
+          <option value="semua">Semua Nama</option>
+        </select>
+      </div>
+
+      <button id="btnCariDatabaseAbsensi">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        Cari Data
+      </button>
+
+    </div>
+
+  </div>
+
+  <div class="panel-card">
+
+    <div class="database-summary">
+      <div>
+        <h3>Data Absensi</h3>
+        <p id="dbAbsensiSummary">Pilih filter lalu cari data absensi.</p>
+      </div>
+    </div>
+
+    <div id="dbAbsensiList" class="database-absensi-list">
+      <div class="empty-state">
+        Belum ada data yang ditampilkan.
+      </div>
+    </div>
+
+  </div>
+
 </section>
 <section id="settingPanel" class="panel-hidden">
 
@@ -411,6 +479,57 @@ class="manual-textarea"></textarea>
 
     <button id="btnSimpanManual" class="btn-save-manual">
       Simpan Absen Manual
+    </button>
+
+  </div>
+
+</div>
+
+<div id="editAbsensiModal" class="manual-modal">
+
+  <div class="manual-box database-edit-box">
+
+    <div class="manual-header">
+      <h2>Edit Absensi</h2>
+
+      <button id="closeEditAbsensiModal">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <input type="hidden" id="editAbsensiId">
+
+    <label class="manual-label">Relawan</label>
+    <select id="editAbsensiRelawan">
+      <option value="">Pilih Relawan</option>
+    </select>
+
+    <label class="manual-label">Tipe Absen</label>
+    <select id="editAbsensiTipe">
+      <option value="masuk">Masuk</option>
+      <option value="pulang">Pulang</option>
+      <option value="tidak_hadir">Tidak Hadir</option>
+    </select>
+
+    <label class="manual-label">Tanggal Jadwal Kerja</label>
+    <input type="date" id="editAbsensiTanggalJadwal">
+
+    <div id="editAbsensiRealtimeGroup">
+      <label class="manual-label">Tanggal Real Absen</label>
+      <input type="date" id="editAbsensiTanggal">
+
+      <label class="manual-label">Jam Real Absen</label>
+      <input type="time" id="editAbsensiJam">
+    </div>
+
+    <label class="manual-label">Keterangan</label>
+    <textarea
+    id="editAbsensiKeterangan"
+    class="manual-textarea"
+    placeholder="Catatan absensi"></textarea>
+
+    <button id="btnUpdateAbsensi" class="btn-save-manual">
+      Simpan Perubahan
     </button>
 
   </div>
