@@ -10,6 +10,7 @@ import {
   doc,
   setDoc,
   addDoc,
+  deleteDoc,
   Timestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -546,6 +547,52 @@ function fillSelectedGajiKhusus() {
   gajiKhususNominal.value = setting?.nominal || "";
 }
 
+function refreshPayrollSetelahGajiKhususBerubah() {
+  if (dataPayroll.length > 0) {
+    dataPayroll = buatPayroll(currentAbsensi);
+    renderPayroll();
+  }
+}
+
+function editGajiKhusus(relawanId) {
+  const setting = semuaGajiKhusus[relawanId];
+  if (!setting || !gajiKhususDivisi || !gajiKhususRelawan) return;
+
+  gajiKhususDivisi.value = setting.divisi || "";
+  renderRelawanGajiKhususOptions();
+  gajiKhususRelawan.value = relawanId;
+  fillSelectedGajiKhusus();
+  gajiKhususLabel?.focus();
+}
+
+async function hapusGajiKhusus(relawanId) {
+  const setting = semuaGajiKhusus[relawanId];
+  if (!setting) return;
+
+  const konfirmasi = confirm(
+    `Hapus gaji khusus untuk ${setting.nama || "relawan ini"}?`
+  );
+
+  if (!konfirmasi) return;
+
+  try {
+    await deleteDoc(doc(db, "gajiKhusus", relawanId));
+    delete semuaGajiKhusus[relawanId];
+
+    if (gajiKhususRelawan?.value === relawanId) {
+      gajiKhususLabel.value = "";
+      gajiKhususNominal.value = "";
+    }
+
+    renderSettingGajiKhusus();
+    refreshPayrollSetelahGajiKhususBerubah();
+    alert("Gaji khusus berhasil dihapus.");
+  } catch (error) {
+    console.error(error);
+    alert("Gagal menghapus gaji khusus.");
+  }
+}
+
 function renderSettingGajiKhusus() {
   if (!gajiKhususList) return;
 
@@ -570,8 +617,35 @@ function renderSettingGajiKhusus() {
         <span>${escapeHtml(item.divisi || "-")} | ${escapeHtml(item.label || "Gaji Khusus")}</span>
       </label>
       <strong>${formatRupiah(item.nominal || 0)}</strong>
+      <div class="gaji-khusus-actions">
+        <button type="button" data-action="edit-gaji-khusus" data-relawan-id="${escapeHtml(item.relawanId)}">
+          Edit
+        </button>
+        <button type="button" class="danger" data-action="hapus-gaji-khusus" data-relawan-id="${escapeHtml(item.relawanId)}">
+          Hapus
+        </button>
+      </div>
     </div>
   `).join("");
+}
+
+if (gajiKhususList) {
+  gajiKhususList.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-action]");
+    if (!button) return;
+
+    const relawanId = button.dataset.relawanId;
+    if (!relawanId) return;
+
+    if (button.dataset.action === "edit-gaji-khusus") {
+      editGajiKhusus(relawanId);
+      return;
+    }
+
+    if (button.dataset.action === "hapus-gaji-khusus") {
+      hapusGajiKhusus(relawanId);
+    }
+  });
 }
 
 if (gajiKhususDivisi) {
@@ -620,11 +694,7 @@ if (btnSaveGajiKhusus) {
       gajiKhususLabel.value = "";
       gajiKhususNominal.value = "";
       renderSettingGajiKhusus();
-
-      if (dataPayroll.length > 0) {
-        dataPayroll = buatPayroll(currentAbsensi);
-        renderPayroll();
-      }
+      refreshPayrollSetelahGajiKhususBerubah();
 
       alert(`Gaji khusus ${relawan.nama} berhasil disimpan.`);
     } catch (error) {
