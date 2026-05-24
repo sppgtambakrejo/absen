@@ -141,12 +141,18 @@ SIDEBAR
   border:none;
 
   background:#f9fafb;
+  color:#111827;
 
   padding:16px;
 
   border-radius:18px;
 
+  display:flex;
+  align-items:center;
+  gap:10px;
+
   text-align:left;
+  text-decoration:none;
 
   font-size:15px;
   font-weight:700;
@@ -162,6 +168,12 @@ SIDEBAR
   background:#111827;
   color:white;
 
+}
+
+.menu-item i{
+  width:20px;
+  text-align:center;
+  flex:0 0 auto;
 }
 
 .menu-item.active{
@@ -701,7 +713,7 @@ MOBILE
 
   }
 
-  .mobile-nav button{
+.mobile-nav button{
 
     border:none;
 
@@ -722,10 +734,18 @@ MOBILE
 
   }
 
+  .mobile-nav .mobile-link{
+    color:#9ca3af;
+  }
+
   .mobile-nav button i{
 
     font-size:18px;
 
+  }
+
+  .mobile-nav .mobile-link i{
+    font-size:18px;
   }
 
   .mobile-nav button.active{
@@ -980,6 +1000,7 @@ SEARCH
   justify-content:center;
   z-index:9999;
   padding:18px;
+  overflow:auto;
 }
 
 .manual-modal.show{
@@ -989,6 +1010,10 @@ SEARCH
 .manual-box{
   width:100%;
   max-width:430px;
+  max-height:calc(100vh - 36px);
+  max-height:calc(100dvh - 36px);
+  overflow-y:auto;
+  overscroll-behavior:contain;
   background:white;
   border-radius:28px;
   padding:22px;
@@ -1000,19 +1025,27 @@ SEARCH
   justify-content:space-between;
   align-items:center;
   margin-bottom:16px;
+  position:sticky;
+  top:-22px;
+  z-index:1;
+  background:white;
+  padding-top:22px;
 }
 
 .manual-header h2{
   font-size:22px;
 }
 
-#closeManualModal{
+#closeManualModal,
+#closeEditAbsensiModal,
+#closeExportModal{
   border:none;
   background:#111827;
   color:white;
   width:42px;
   height:42px;
   border-radius:50%;
+  flex:0 0 auto;
 }
 
 .manual-box select,
@@ -1079,11 +1112,229 @@ SEARCH
   align-items: center;
   justify-content: center;
   text-decoration: none;
-  color: inherit;
-  gap: 4px;
-  font-size: 12px;
+  color: #9ca3af;
+  gap: 5px;
+  font-size: 11px;
+  font-weight:700;
+  min-width:0;
 }
 
 .mobile-link i {
   font-size: 18px;
+}
+
+.mobile-link span{
+  max-width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.database-filter-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:14px;
+  align-items:end;
+}
+
+.database-filter-grid label{
+  display:block;
+  margin-bottom:8px;
+  font-size:13px;
+  font-weight:800;
+  color:#374151;
+}
+
+.database-filter-grid input,
+.database-filter-grid select{
+  width:100%;
+  border:none;
+  background:#f3f4f6;
+  padding:14px 18px;
+  border-radius:16px;
+  font-size:15px;
+}
+
+.database-filter-grid button{
+  border:none;
+  background:#111827;
+  color:white;
+  padding:14px 18px;
+  border-radius:16px;
+  font-weight:800;
+  cursor:pointer;
+}
+
+.database-filter-grid button:disabled{
+  opacity:0.75;
+  cursor:not-allowed;
+}
+
+.database-summary{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  margin-bottom:16px;
+}
+
+.database-summary h3{
+  font-size:18px;
+  font-weight:800;
+}
+
+.database-summary p{
+  margin:6px 0 0;
+}
+
+.database-absensi-list{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+
+.database-absensi-card{
+  background:#f9fafb;
+  border:1px solid #eef0f3;
+  border-radius:22px;
+  padding:16px;
+}
+
+.database-absensi-main{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:14px;
+}
+
+.database-absensi-title{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:8px;
+  font-size:16px;
+  font-weight:800;
+}
+
+.database-absensi-subtitle{
+  margin-top:6px;
+  color:#6b7280;
+  font-size:12px;
+  word-break:break-word;
+}
+
+.double-badge{
+  background:#fef3c7;
+  color:#92400e;
+  padding:7px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:800;
+}
+
+.database-actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+
+.database-detail-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+  gap:10px;
+}
+
+.database-detail-grid div{
+  background:white;
+  border:1px solid #e5e7eb;
+  border-radius:16px;
+  padding:12px;
+  min-width:0;
+}
+
+.database-detail-grid span{
+  display:block;
+  color:#6b7280;
+  font-size:12px;
+  font-weight:700;
+  margin-bottom:7px;
+}
+
+.database-detail-grid strong{
+  display:block;
+  color:#111827;
+  font-size:13px;
+  line-height:1.4;
+  word-break:break-word;
+}
+
+.database-detail-grid .badge{
+  display:inline-flex;
+  width:max-content;
+  max-width:100%;
+}
+
+.database-edit-box{
+  max-width:520px;
+}
+
+@media(max-width:768px){
+  .manual-modal{
+    align-items:flex-start;
+    padding:12px;
+  }
+
+  .manual-box{
+    max-width:100%;
+    max-height:calc(100vh - 24px);
+    max-height:calc(100dvh - 24px);
+    border-radius:22px;
+    padding:18px;
+  }
+
+  .manual-header{
+    top:-18px;
+    padding-top:18px;
+    margin-bottom:12px;
+  }
+
+  .manual-header h2{
+    font-size:19px;
+  }
+
+  .manual-box select,
+  .manual-box input{
+    padding:12px 14px;
+    margin-top:10px;
+  }
+
+  .manual-label{
+    margin-top:12px;
+  }
+
+  .manual-textarea{
+    min-height:72px;
+    padding:12px 14px;
+    margin-top:10px;
+  }
+
+  .btn-save-manual{
+    padding:14px;
+    margin-top:14px;
+  }
+
+  .database-absensi-main{
+    flex-direction:column;
+  }
+
+  .database-actions{
+    width:100%;
+    justify-content:flex-start;
+  }
+
+  .database-actions button{
+    flex:1;
+  }
 }
