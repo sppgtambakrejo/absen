@@ -19,7 +19,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 console.log("Payroll aktif");
-console.log("Payroll print template version: mobile-signature-v24");
+console.log("Payroll print template version: drive-signature-v25");
 
 // CONFIG: Jika ingin upload ke Google Apps Script, isi GAS_ENDPOINT dan set USE_GAS=true
 const USE_GAS = true; // ubah ke true untuk mengaktifkan upload
@@ -31,11 +31,23 @@ async function uploadSignatureToGAS(dataUrl, filename, signer) {
   const payload = { dataUrl, filename, signer, token: GAS_SECRET };
   const res = await fetch(GAS_ENDPOINT, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    // Apps Script Web App sering menolak preflight CORS dari application/json.
+    // text/plain tetap berisi JSON, tetapi dikirim sebagai simple request.
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body: JSON.stringify(payload)
   });
   if (!res.ok) throw new Error('Upload gagal: ' + res.status);
-  return res.json();
+  const text = await res.text();
+  let result;
+  try {
+    result = JSON.parse(text);
+  } catch (error) {
+    throw new Error('Respons GAS tidak valid: ' + text.slice(0, 120));
+  }
+  if (!result.success) {
+    throw new Error(result.error || 'Upload ke Google Drive gagal');
+  }
+  return result;
 }
 
 const payrollBody = document.getElementById("payrollBody");
@@ -110,7 +122,9 @@ const defaultSlipTemplate = {
   signer2: "Akuntan",
   signer3: "Kepala SPPG",
   signer2Signature: "",
-  signer3Signature: ""
+  signer3Signature: "",
+  signer2SignatureDrive: null,
+  signer3SignatureDrive: null
 };
 
 let slipTemplate = { ...defaultSlipTemplate };
@@ -220,14 +234,34 @@ async function applySignatureUpload(input, signatureKey, previewEl) {
 
   try {
     const rawDataUrl = await readFileAsDataUrl(file);
-    slipTemplate[signatureKey] = await resizeSignatureImage(rawDataUrl);
+    const resized = await resizeSignatureImage(rawDataUrl);
+    slipTemplate[signatureKey] = resized;
+    if (USE_GAS && GAS_ENDPOINT) {
+      try {
+        await uploadAndRememberSignature(resized, signatureKey, signatureKey.replace("Signature", ""));
+      } catch (uploadError) {
+        console.error("Upload tanda tangan ke GAS gagal:", uploadError);
+        slipTemplate[signatureKey + "Drive"] = null;
+        alert("Upload tanda tangan ke Google Drive gagal: " + (uploadError.message || uploadError));
+      }
+    }
     renderSignaturePreview(previewEl, slipTemplate[signatureKey]);
   } catch (error) {
     console.error("Gagal memproses tanda tangan:", error);
-    alert("Gagal membaca file tanda tangan.");
+    alert(error.message || "Gagal membaca file tanda tangan.");
   } finally {
     clearFileInput(input);
   }
+}
+
+async function uploadAndRememberSignature(dataUrl, signatureKey, signer) {
+  if (!USE_GAS || !GAS_ENDPOINT) return null;
+
+  const filename = `sig_${signer}_${Date.now()}.png`;
+  const result = await uploadSignatureToGAS(dataUrl, filename, signer);
+  const driveKey = signatureKey + "Drive";
+  slipTemplate[driveKey] = result.meta || null;
+  return result.meta || null;
 }
 
 function saveSlipTemplate() {
@@ -241,6 +275,8 @@ function saveSlipTemplate() {
   slipTemplate.signer3 = templateSigner3.value || defaultSlipTemplate.signer3;
   slipTemplate.signer2Signature = slipTemplate.signer2Signature || "";
   slipTemplate.signer3Signature = slipTemplate.signer3Signature || "";
+  slipTemplate.signer2SignatureDrive = slipTemplate.signer2SignatureDrive || null;
+  slipTemplate.signer3SignatureDrive = slipTemplate.signer3SignatureDrive || null;
 
   localStorage.setItem("slipTemplatePayroll", JSON.stringify(slipTemplate));
   alert("Template slip gaji disimpan.");
@@ -393,6 +429,7 @@ if (templateSigner3Signature) {
 if (btnClearSigner2Signature) {
   btnClearSigner2Signature.addEventListener("click", () => {
     slipTemplate.signer2Signature = "";
+    slipTemplate.signer2SignatureDrive = null;
     renderSignaturePreview(templateSigner2SignaturePreview, "");
     clearFileInput(templateSigner2Signature);
   });
@@ -400,6 +437,7 @@ if (btnClearSigner2Signature) {
 if (btnClearSigner3Signature) {
   btnClearSigner3Signature.addEventListener("click", () => {
     slipTemplate.signer3Signature = "";
+    slipTemplate.signer3SignatureDrive = null;
     renderSignaturePreview(templateSigner3SignaturePreview, "");
     clearFileInput(templateSigner3Signature);
   });
@@ -500,20 +538,18 @@ if (btnSavePad) btnSavePad.addEventListener('click', async () => {
   try {
     const resized = await resizeSignatureImage(dataUrl);
     const key = currentSigningKey + 'Signature';
+    let driveMeta = null;
+    let uploadErrorMessage = "";
 
     if (USE_GAS && GAS_ENDPOINT) {
       try {
-        const filename = `sig_${currentSigningKey}_${Date.now()}.png`;
-        const result = await uploadSignatureToGAS(resized, filename, currentSigningKey);
-        if (result && result.success && result.meta && result.meta.url) {
-          slipTemplate[key] = result.meta.url; // store remote URL
-        } else {
-          slipTemplate[key] = resized; // fallback to local data
-        }
+        driveMeta = await uploadAndRememberSignature(resized, key, currentSigningKey);
+        slipTemplate[key] = resized;
       } catch (upErr) {
         console.error('Upload ke GAS gagal, menyimpan lokal:', upErr);
         slipTemplate[key] = resized;
-        alert('Upload tanda tangan gagal, tersimpan secara lokal.');
+        slipTemplate[key + 'Drive'] = null;
+        uploadErrorMessage = upErr.message || String(upErr);
       }
     } else {
       slipTemplate[key] = resized;
@@ -522,7 +558,11 @@ if (btnSavePad) btnSavePad.addEventListener('click', async () => {
     // persist immediately
     localStorage.setItem('slipTemplatePayroll', JSON.stringify(slipTemplate));
     renderSignaturePreview(currentSigningKey === 'signer2' ? templateSigner2SignaturePreview : templateSigner3SignaturePreview, slipTemplate[key]);
-    alert('Tanda tangan tersimpan.');
+    alert(driveMeta
+      ? 'Tanda tangan tersimpan dan terupload ke Google Drive.'
+      : uploadErrorMessage
+        ? 'Upload tanda tangan ke Google Drive gagal: ' + uploadErrorMessage + '. Tanda tangan tersimpan lokal.'
+        : 'Tanda tangan tersimpan lokal.');
     closeSignatureModal();
   } catch (err) {
     console.error('Gagal menyimpan tanda tangan:', err);
